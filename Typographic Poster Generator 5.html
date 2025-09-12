@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typographic Poster Generator Pro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            height: 100vh;
+            background: #f8fafc;
+        }
+
+        .sidebar {
+            background: #ffffff;
+            border-right: 1px solid #e2e8f0;
+            overflow-y: auto;
+            box-shadow: 4px 0 12px rgba(0,0,0,0.05);
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid #e2e8f0;
+            background: linear-gradient(135deg, #1e293b, #334155);
+            color: white;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+
+        .control-section {
+            padding: 20px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .control-section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-group {
+            margin-bottom: 16px;
+        }
+
+        .control-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #374151;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .range-input {
+            -webkit-appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: #e2e8f0;
+            outline: none;
+        }
+
+        .range-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .range-input::-webkit-slider-thumb:hover {
+            background: #2563eb;
+            transform: scale(1.1);
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .color-option {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .color-option.active {
+            border-color: #1e293b;
+            box-shadow: 0 0 0 2px rgba(30, 41, 59, 0.2);
+        }
+
+        .layout-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .layout-option {
+            aspect-ratio: 1;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .layout-option:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .layout-option.active {
+            border-color: #1e293b;
+            background: #f8fafc;
+        }
+
+        .layout-preview {
+            width: 60%;
+            height: 60%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .layout-line {
+            background: #64748b;
+            border-radius: 2px;
+        }
+
+        .effects-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .effect-btn {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .effect-btn:hover {
+            border-color: #3b82f6;
+            background: #f8fafc;
+        }
+
+        .effect-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .toolbar {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .toolbar-left {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8fafc;
+            padding: 6px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .zoom-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .zoom-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            background: linear-gradient(45deg, #f8fafc 25%, transparent 25%), 
+                        linear-gradient(-45deg, #f8fafc 25%, transparent 25%), 
+                        linear-gradient(45deg, transparent 75%, #f8fafc 75%), 
+                        linear-gradient(-45deg, transparent 75%, #f8fafc 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        .poster-canvas {
+            background: white;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .poster-content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .text-element {
+            position: absolute;
+            cursor: move;
+            user-select: none;
+            transition: all 0.2s ease;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .text-element:hover {
+            transform: scale(1.02);
+        }
+
+        .text-element.selected {
+            outline: 2px dashed #3b82f6;
+            outline-offset: 4px;
+        }
+
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 12px;
+            font-weight: 600;
+            z-index: 1000;
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .preset-btn {
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+
+        .preset-btn:hover {
+            border-color: #3b82f6;
+            background: #f8fafc;
+        }
+
+        .preset-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: #1e293b;
+        }
+
+        .preset-desc {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        @media (max-width: 1200px) {
+            .app-container {
+                grid-template-columns: 300px 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr;
+            }
+            
+            .sidebar {
+                border-right: none;
+                border-bottom: 1px solid #e2e8f0;
+                max-height: 50vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">TypoGen Pro</div>
+                <div class="subtitle">Professional Typography Studio</div>
+            </div>
+
+            <div class="control-section">
+                <h3>📝 Text Content</h3>
+                <div class="control-group">
+                    <label class="control-label">Main Text</label>
+                    <textarea id="mainText" placeholder="Enter your text here...">DESIGN
+IS NOT
+JUST WHAT
+IT LOOKS
+LIKE</textarea>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Subtitle</label>
+                    <input type="text" id="subtitle" placeholder="Optional subtitle" value="Design is how it works">
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h3>🎨 Typography</h3>
+                <div class="control-group">
+                    <label class="control-label">Font Family</label>
+                    <select id="fontFamily">
+                        <option value="'Inter', sans-serif">Inter (Modern)</option>
+                        <option value="'Helvetica Neue', sans-serif">Helvetica Neue</option>
+                        <option value="'Georgia', serif">Georgia (Serif)</option>
+                        <option value="'Times New Roman', serif">Times New Roman</option>
+                        <option value="'Courier New', monospace">Courier New (Mono)</option>
+                        <option value="'Arial Black', sans-serif">Arial Black</option>
+                        <option value="'Impact', sans-serif">Impact</option>
+                        <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Font Size: <span id="fontSizeValue">72px</span></label>
+                    <input type="range" id="fontSize" min="20" max="200" value="72" class="range-input">
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Font Weight</label>
+                    <select id="fontWeight">
+                        <option value="300">Light</option>
+                        <option value="400">Normal</option>
+                        <option value="600">Semi Bold</option>
+                        <option value="700">Bold</option>
+                        <option value="900" selected>Black</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Letter Spacing: <span id="letterSpacingValue">-2px</span></label>
+                    <input type="range" id="letterSpacing" min="-10" max="20" value="-2" class="range-input">
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Line Height: <span id="lineHeightValue">0.9</span></label>
+                    <input type="range" id="lineHeight" min="0.5" max="2" step="0.1" value="0.9" class="range-input">
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h3>🎯 Layout</h3>
+                <div class="layout-grid">
+                    <div class="layout-option active" data-layout="center">
+                        <div class="layout-preview">
+                            <div class="layout-line" style="width: 80%; height: 3px;"></div>
+                            <div class="layout-line" style="width: 60%; height: 3px;"></div>
+                            <div class="layout-line" style="width: 70%; height: 3px;"></div>
+                        </div>
+                    </div>
+                    <div class="layout-option" data-layout="left">
+                        <div class="layout-preview">
+                            <div class="layout-line" style="width: 80%; height: 3px; align-self: flex-start;"></div>
+                            <div class="layout-line" style="width: 60%; height: 3px; align-self: flex-start;"></div>
+                            <div class="layout-line" style="width: 70%; height: 3px; align-self: flex-start;"></div>
+                        </div>
+                    </div>
+                    <div class="layout-option" data-layout="right">
+                        <div class="layout-preview">
+                            <div class="layout-line" style="width: 80%; height: 3px; align-self: flex-end;"></div>
+                            <div class="layout-line" style="width: 60%; height: 3px; align-self: flex-end;"></div>
+                            <div class="layout-line" style="width: 70%; height: 3px; align-self: flex-end;"></div>
+                        </div>
+                    </div>
+                    <div class="layout-option" data-layout="diagonal">
+                        <div class="layout-preview" style="transform: rotate(-15deg);">
+                            <div class="layout-line" style="width: 60%; height: 3px;"></div>
+                            <div class="layout-line" style="width: 80%; height: 3px;"></div>
+                            <div class="layout-line" style="width: 50%; height: 3px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h3>🌈 Colors</h3>
+                <div class="control-group">
+                    <label class="control-label">Text Color</label>
+                    <div class="color-grid">
+                        <div class="color-option active" style="background: #000000;" data-color="#000000"></div>
+                        <div class="color-option" style="background: #ffffff; border: 1px solid #e2e8f0;" data-color="#ffffff"></div>
+                        <div class="color-option" style="background: #ef4444;" data-color="#ef4444"></div>
+                        <div class="color-option" style="background: #3b82f6;" data-color="#3b82f6"></div>
+                        <div class="color-option" style="background: #10b981;" data-color="#10b981"></div>
+                        <div class="color-option" style="background: #f59e0b;" data-color="#f59e0b"></div>
+                        <div class="color-option" style="background: #8b5cf6;" data-color="#8b5cf6"></div>
+                        <div class="color-option" style="background: #ec4899;" data-color="#ec4899"></div>
+                        <div class="color-option" style="background: #64748b;" data-color="#64748b"></div>
+                        <div class="color-option" style="background: #dc2626;" data-color="#dc2626"></div>
+                        <div class="color-option" style="background: #059669;" data-color="#059669"></div>
+                        <div class="color-option" style="background: #7c3aed;" data-color="#7c3aed"></div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Background</label>
+                    <div class="color-grid">
+                        <div class="color-option active" style="background: #ffffff; border: 1px solid #e2e8f0;" data-bg="#ffffff"></div>
+                        <div class="color-option" style="background: #000000;" data-bg="#000000"></div>
+                        <div class="color-option" style="background: #f8fafc;" data-bg="#f8fafc"></div>
+                        <div class="color-option" style="background: #1e293b;" data-bg="#1e293b"></div>
+                        <div class="color-option" style="background: #fef3c7;" data-bg="#fef3c7"></div>
+                        <div class="color-option" style="background: #dbeafe;" data-bg="#dbeafe"></div>
+                        <div class="color-option" style="background: #dcfce7;" data-bg="#dcfce7"></div>
+                        <div class="color-option" style="background: #fce7f3;" data-bg="#fce7f3"></div>
+                        <div class="color-option" style="background: #f3e8ff;" data-bg="#f3e8ff"></div>
+                        <div class="color-option" style="background: #fef2f2;" data-bg="#fef2f2"></div>
+                        <div class="color-option" style="background: #ecfdf5;" data-bg="#ecfdf5"></div>
+                        <div class="color-option" style="background: #fffbeb;" data-bg="#fffbeb"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h3>✨ Effects</h3>
+                <div class="effects-grid">
+                    <div class="effect-btn" data-effect="shadow">Drop Shadow</div>
+                    <div class="effect-btn" data-effect="gradient">Gradient</div>
+                    <div class="effect-btn" data-effect="outline">Text Outline</div>
+                    <div class="effect-btn" data-effect="glow">Glow Effect</div>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h3>📐 Canvas Size</h3>
+                <div class="control-group">
+                    <label class="control-label">Format</label>
+                    <select id="canvasSize">
+                        <option value="800x1000">Poster (800x1000px)</option>
+                        <option value="1080x1080">Square (1080x1080px)</option>
+                        <option value="1920x1080">Landscape (1920x1080px)</option>
+                        <option value="1080x1920">Story (1080x1920px)</option>
+                        <option value="2480x3508">A4 Print (2480x3508px)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h3>🎨 Design Presets</h3>
+                <div class="preset-buttons">
+                    <div class="preset-btn" data-preset="minimal">
+                        <div class="preset-title">Minimal Swiss</div>
+                        <div class="preset-desc">Clean, geometric, timeless</div>
+                    </div>
+                    <div class="preset-btn" data-preset="bold">
+                        <div class="preset-title">Bold Impact</div>
+                        <div class="preset-desc">High contrast, powerful</div>
+                    </div>
+                    <div class="preset-btn" data-preset="vintage">
+                        <div class="preset-title">Vintage Poster</div>
+                        <div class="preset-desc">Retro colors, classic feel</div>
+                    </div>
+                    <div class="preset-btn" data-preset="modern">
+                        <div class="preset-title">Modern Gradient</div>
+                        <div class="preset-desc">Contemporary, vibrant</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" id="exportPNG">PNG</button>
+                    <button class="btn btn-primary" id="exportPDF">PDF</button>
+                </div>
+                <button class="btn btn-secondary" id="randomize" style="width: 100%; margin-top: 8px;">🎲 Randomize</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <div class="zoom-controls">
+                        <button class="zoom-btn" id="zoomOut">-</button>
+                        <span id="zoomLevel">100%</span>
+                        <button class="zoom-btn" id="zoomIn">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="canvas-container">
+                <div class="poster-canvas" id="posterCanvas">
+                    <div class="poster-content" id="posterContent">
+                        <!-- Dynamic content will be generated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class TypographicPosterGenerator {
+            constructor() {
+                this.currentZoom = 1;
+                this.currentLayout = 'center';
+                this.currentTextColor = '#000000';
+                this.currentBgColor = '#ffffff';
+                this.activeEffects = new Set();
+                this.canvasWidth = 800;
+                this.canvasHeight = 1000;
+                
+                this.init();
+                this.setupEventListeners();
+                this.updatePoster();
+            }
+
+            init() {
+                this.updateCanvasSize();
+            }
+
+            setupEventListeners() {
+                // Text controls
+                document.getElementById('mainText').addEventListener('input', () => this.updatePoster());
+                document.getElementById('subtitle').addEventListener('input', () => this.updatePoster());
+                
+                // Typography controls
+                document.getElementById('fontFamily').addEventListener('change', () => this.updatePoster());
+                
+                const fontSize = document.getElementById('fontSize');
+                fontSize.addEventListener('input', (e) => {
+                    document.getElementById('fontSizeValue').textContent = e.target.value + 'px';
+                    this.updatePoster();
+                });
+
+                document.getElementById('fontWeight').addEventListener('change', () => this.updatePoster());
+                
+                const letterSpacing = document.getElementById('letterSpacing');
+                letterSpacing.addEventListener('input', (e) => {
+                    document.getElementById('letterSpacingValue').textContent = e.target.value + 'px';
+                    this.updatePoster();
+                });
+
+                const lineHeight = document.getElementById('lineHeight');
+                lineHeight.addEventListener('input', (e) => {
+                    document.getElementById('lineHeightValue').textContent = e.target.value;
+                    this.updatePoster();
+                });
+
+                // Layout controls
+                document.querySelectorAll('.layout-option').forEach(option => {
+                    option.addEventListener('click', (e) => {
+                        document.querySelectorAll('.layout-option').forEach(o => o.classList.remove('active'));
+                        option.classList.add('active');
+                        this.currentLayout = option.dataset.layout;
+                        this.updatePoster();
+                    });
+                });
+
+                // Color controls
+                document.querySelectorAll('[data-color]').forEach(color => {
+                    color.addEventListener('click', (e) => {
+                        document.querySelectorAll('[data-color]').forEach(c => c.classList.remove('active'));
+                        color.classList.add('active');
+                        this.currentTextColor = color.dataset.color;
+                        this.updatePoster();
+                    });
+                });
+
+                document.querySelectorAll('[data-bg]').forEach(bg => {
+                    bg.addEventListener('click', (e) => {
+                        document.querySelectorAll('[data-bg]').forEach(b => b.classList.remove('active'));
+                        bg.classList.add('active');
+                        this.currentBgColor = bg.dataset.bg;
+                        this.updatePoster();
+                    });
+                });
+
+                // Effects
+                document.querySelectorAll('.effect-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const effect = btn.dataset.effect;
+                        if (this.activeEffects.has(effect)) {
+                            this.activeEffects.delete(effect);
+                            btn.classList.remove('active');
+                        } else {
+                            this.activeEffects.add(effect);
+                            btn.classList.add('active');
+                        }
+                        this.updatePoster();
+                    });
+                });
+
+                // Canvas size
+                document.getElementById('canvasSize').addEventListener('change', (e) => {
+                    const [width, height] = e.target.value.split('x').map(Number);
+                    this.canvasWidth = width;
+                    this.canvasHeight = height;
+                    this.updateCanvasSize();
+                    this.updatePoster();
+                });
+
+                // Presets
+                document.querySelectorAll('[data-preset]').forEach(preset => {
+                    preset.addEventListener('click', (e) => {
+                        this.applyPreset(preset.dataset.preset);
+                    });
+                });
+
+                // Zoom controls
+                document.getElementById('zoomIn').addEventListener('click', () => this.adjustZoom(0.1));
+                document.getElementById('zoomOut').addEventListener('click', () => this.adjustZoom(-0.1));
+
+                // Export buttons
+                document.getElementById('exportPNG').addEventListener('click', () => this.exportPNG());
+                document.getElementById('exportPDF').addEventListener('click', () => this.exportPDF());
+                
+                // Randomize
+                document.getElementById('randomize').addEventListener('click', () => this.randomizeDesign());
+            }
+
+            updateCanvasSize() {
+                const canvas = document.getElementById('posterCanvas');
+                const maxWidth = 400;
+                const maxHeight = 600;
+                
+                let displayWidth, displayHeight;
+                const aspectRatio = this.canvasWidth / this.canvasHeight;
+                
+                if (aspectRatio > maxWidth / maxHeight) {
+                    displayWidth = maxWidth;
+                    displayHeight = maxWidth / aspectRatio;
+                } else {
+                    displayHeight = maxHeight;
+                    displayWidth = maxHeight * aspectRatio;
+                }
+                
+                canvas.style.width = displayWidth + 'px';
+                canvas.style.height = displayHeight + 'px';
+            }
+
+            updatePoster() {
+                const posterContent = document.getElementById('posterContent');
+                const mainText = document.getElementById('mainText').value;
+                const subtitle = document.getElementById('subtitle').value;
+                
+                // Clear existing content
+                posterContent.innerHTML = '';
+                
+                // Apply background
+                posterContent.style.background = this.currentBgColor;
+                
+                // Create main text element
+                if (mainText.trim()) {
+                    const textElement = document.createElement('div');
+                    textElement.className = 'text-element';
+                    textElement.textContent = mainText;
+                    
+                    // Apply typography
+                    const fontFamily = document.getElementById('fontFamily').value;
+                    const fontSize = document.getElementById('fontSize').value;
+                    const fontWeight = document.getElementById('fontWeight').value;
+                    const letterSpacing = document.getElementById('letterSpacing').value;
+                    const lineHeight = document.getElementById('lineHeight').value;
+                    
+                    textElement.style.fontFamily = fontFamily;
+                    textElement.style.fontSize = fontSize + 'px';
+                    textElement.style.fontWeight = fontWeight;
+                    textElement.style.letterSpacing = letterSpacing + 'px';
+                    textElement.style.lineHeight = lineHeight;
+                    textElement.style.color = this.currentTextColor;
+                    textElement.style.textTransform = 'uppercase';
+                    
+                    // Apply layout
+                    this.applyLayout(textElement, 'main');
+                    
+                    // Apply effects
+                    this.applyEffects(textElement);
+                    
+                    posterContent.appendChild(textElement);
+                }
+                
+                // Create subtitle element
+                if (subtitle.trim()) {
+                    const subtitleElement = document.createElement('div');
+                    subtitleElement.className = 'text-element';
+                    subtitleElement.textContent = subtitle;
+                    
+                    // Apply typography (smaller, lighter)
+                    const fontFamily = document.getElementById('fontFamily').value;
+                    const baseFontSize = parseInt(document.getElementById('fontSize').value);
+                    const letterSpacing = document.getElementById('letterSpacing').value;
+                    
+                    subtitleElement.style.fontFamily = fontFamily;
+                    subtitleElement.style.fontSize = (baseFontSize * 0.3) + 'px';
+                    subtitleElement.style.fontWeight = '400';
+                    subtitleElement.style.letterSpacing = (parseInt(letterSpacing) * 2) + 'px';
+                    subtitleElement.style.lineHeight = '1.4';
+                    subtitleElement.style.color = this.currentTextColor;
+                    subtitleElement.style.opacity = '0.8';
+                    
+                    // Apply layout
+                    this.applyLayout(subtitleElement, 'subtitle');
+                    
+                    posterContent.appendChild(subtitleElement);
+                }
+            }
+
+            applyLayout(element, type) {
+                const containerWidth = this.canvasWidth;
+                const containerHeight = this.canvasHeight;
+                
+                element.style.position = 'absolute';
+                element.style.maxWidth = '90%';
+                
+                switch (this.currentLayout) {
+                    case 'center':
+                        element.style.left = '50%';
+                        element.style.top = type === 'main' ? '45%' : '65%';
+                        element.style.transform = 'translate(-50%, -50%)';
+                        element.style.textAlign = 'center';
+                        break;
+                        
+                    case 'left':
+                        element.style.left = '10%';
+                        element.style.top = type === 'main' ? '45%' : '65%';
+                        element.style.transform = 'translateY(-50%)';
+                        element.style.textAlign = 'left';
+                        break;
+                        
+                    case 'right':
+                        element.style.right = '10%';
+                        element.style.top = type === 'main' ? '45%' : '65%';
+                        element.style.transform = 'translateY(-50%)';
+                        element.style.textAlign = 'right';
+                        break;
+                        
+                    case 'diagonal':
+                        element.style.left = '50%';
+                        element.style.top = type === 'main' ? '45%' : '65%';
+                        element.style.transform = 'translate(-50%, -50%) rotate(-5deg)';
+                        element.style.textAlign = 'center';
+                        break;
+                }
+            }
+
+            applyEffects(element) {
+                let textShadow = '';
+                let background = '';
+                let webkitTextStroke = '';
+                let filter = '';
+                
+                if (this.activeEffects.has('shadow')) {
+                    textShadow += '4px 4px 12px rgba(0,0,0,0.3)';
+                }
+                
+                if (this.activeEffects.has('gradient')) {
+                    element.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                    element.style.webkitBackgroundClip = 'text';
+                    element.style.webkitTextFillColor = 'transparent';
+                    element.style.backgroundClip = 'text';
+                }
+                
+                if (this.activeEffects.has('outline')) {
+                    webkitTextStroke = '2px ' + (this.currentBgColor === '#ffffff' ? '#000000' : '#ffffff');
+                }
+                
+                if (this.activeEffects.has('glow')) {
+                    textShadow += (textShadow ? ', ' : '') + `0 0 20px ${this.currentTextColor}40, 0 0 40px ${this.currentTextColor}20`;
+                }
+                
+                element.style.textShadow = textShadow;
+                element.style.webkitTextStroke = webkitTextStroke;
+                element.style.filter = filter;
+            }
+
+            applyPreset(presetName) {
+                const presets = {
+                    minimal: {
+                        fontFamily: "'Helvetica Neue', sans-serif",
+                        fontSize: 60,
+                        fontWeight: 300,
+                        letterSpacing: -1,
+                        lineHeight: 1.1,
+                        textColor: '#000000',
+                        bgColor: '#ffffff',
+                        layout: 'left',
+                        effects: []
+                    },
+                    bold: {
+                        fontFamily: "'Arial Black', sans-serif",
+                        fontSize: 90,
+                        fontWeight: 900,
+                        letterSpacing: -3,
+                        lineHeight: 0.8,
+                        textColor: '#ffffff',
+                        bgColor: '#000000',
+                        layout: 'center',
+                        effects: ['shadow']
+                    },
+                    vintage: {
+                        fontFamily: "'Georgia', serif",
+                        fontSize: 70,
+                        fontWeight: 700,
+                        letterSpacing: 2,
+                        lineHeight: 1.0,
+                        textColor: '#8b5cf6',
+                        bgColor: '#fef3c7',
+                        layout: 'center',
+                        effects: ['outline']
+                    },
+                    modern: {
+                        fontFamily: "'Inter', sans-serif",
+                        fontSize: 75,
+                        fontWeight: 600,
+                        letterSpacing: -2,
+                        lineHeight: 0.9,
+                        textColor: '#3b82f6',
+                        bgColor: '#1e293b',
+                        layout: 'diagonal',
+                        effects: ['gradient', 'glow']
+                    }
+                };
+                
+                const preset = presets[presetName];
+                if (!preset) return;
+                
+                // Apply preset values
+                document.getElementById('fontFamily').value = preset.fontFamily;
+                document.getElementById('fontSize').value = preset.fontSize;
+                document.getElementById('fontSizeValue').textContent = preset.fontSize + 'px';
+                document.getElementById('fontWeight').value = preset.fontWeight;
+                document.getElementById('letterSpacing').value = preset.letterSpacing;
+                document.getElementById('letterSpacingValue').textContent = preset.letterSpacing + 'px';
+                document.getElementById('lineHeight').value = preset.lineHeight;
+                document.getElementById('lineHeightValue').textContent = preset.lineHeight;
+                
+                // Update colors
+                this.currentTextColor = preset.textColor;
+                this.currentBgColor = preset.bgColor;
+                
+                // Update color selections
+                document.querySelectorAll('[data-color]').forEach(c => {
+                    c.classList.toggle('active', c.dataset.color === preset.textColor);
+                });
+                document.querySelectorAll('[data-bg]').forEach(b => {
+                    b.classList.toggle('active', b.dataset.bg === preset.bgColor);
+                });
+                
+                // Update layout
+                this.currentLayout = preset.layout;
+                document.querySelectorAll('.layout-option').forEach(l => {
+                    l.classList.toggle('active', l.dataset.layout === preset.layout);
+                });
+                
+                // Update effects
+                this.activeEffects.clear();
+                document.querySelectorAll('.effect-btn').forEach(btn => btn.classList.remove('active'));
+                preset.effects.forEach(effect => {
+                    this.activeEffects.add(effect);
+                    document.querySelector(`[data-effect="${effect}"]`).classList.add('active');
+                });
+                
+                this.updatePoster();
+            }
+
+            randomizeDesign() {
+                const fonts = ["'Inter', sans-serif", "'Helvetica Neue', sans-serif", "'Georgia', serif", "'Impact', sans-serif"];
+                const colors = ['#000000', '#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+                const bgColors = ['#ffffff', '#000000', '#f8fafc', '#1e293b', '#fef3c7', '#dbeafe', '#dcfce7'];
+                const layouts = ['center', 'left', 'right', 'diagonal'];
+                const weights = ['300', '400', '600', '700', '900'];
+                
+                // Randomize values
+                document.getElementById('fontFamily').value = fonts[Math.floor(Math.random() * fonts.length)];
+                document.getElementById('fontSize').value = 50 + Math.random() * 100;
+                document.getElementById('fontSizeValue').textContent = document.getElementById('fontSize').value + 'px';
+                document.getElementById('fontWeight').value = weights[Math.floor(Math.random() * weights.length)];
+                
+                const randomLetterSpacing = -5 + Math.random() * 15;
+                document.getElementById('letterSpacing').value = randomLetterSpacing;
+                document.getElementById('letterSpacingValue').textContent = Math.round(randomLetterSpacing) + 'px';
+                
+                const randomLineHeight = 0.7 + Math.random() * 0.8;
+                document.getElementById('lineHeight').value = randomLineHeight;
+                document.getElementById('lineHeightValue').textContent = randomLineHeight.toFixed(1);
+                
+                // Randomize colors
+                this.currentTextColor = colors[Math.floor(Math.random() * colors.length)];
+                this.currentBgColor = bgColors[Math.floor(Math.random() * bgColors.length)];
+                
+                // Update color selections
+                document.querySelectorAll('[data-color]').forEach(c => {
+                    c.classList.toggle('active', c.dataset.color === this.currentTextColor);
+                });
+                document.querySelectorAll('[data-bg]').forEach(b => {
+                    b.classList.toggle('active', b.dataset.bg === this.currentBgColor);
+                });
+                
+                // Randomize layout
+                this.currentLayout = layouts[Math.floor(Math.random() * layouts.length)];
+                document.querySelectorAll('.layout-option').forEach(l => {
+                    l.classList.toggle('active', l.dataset.layout === this.currentLayout);
+                });
+                
+                // Randomize effects
+                this.activeEffects.clear();
+                document.querySelectorAll('.effect-btn').forEach(btn => btn.classList.remove('active'));
+                const effects = ['shadow', 'gradient', 'outline', 'glow'];
+                const numEffects = Math.floor(Math.random() * 3);
+                for (let i = 0; i < numEffects; i++) {
+                    const effect = effects[Math.floor(Math.random() * effects.length)];
+                    this.activeEffects.add(effect);
+                    document.querySelector(`[data-effect="${effect}"]`).classList.add('active');
+                }
+                
+                this.updatePoster();
+            }
+
+            adjustZoom(delta) {
+                this.currentZoom = Math.max(0.5, Math.min(2, this.currentZoom + delta));
+                document.getElementById('zoomLevel').textContent = Math.round(this.currentZoom * 100) + '%';
+                
+                const canvas = document.getElementById('posterCanvas');
+                canvas.style.transform = `scale(${this.currentZoom})`;
+            }
+
+            showLoading(message) {
+                const loading = document.createElement('div');
+                loading.className = 'loading';
+                loading.textContent = message;
+                loading.id = 'loadingIndicator';
+                document.body.appendChild(loading);
+            }
+
+            hideLoading() {
+                const loading = document.getElementById('loadingIndicator');
+                if (loading) loading.remove();
+            }
+
+            async exportPNG() {
+                this.showLoading('Generating PNG...');
+                
+                try {
+                    const canvas = document.getElementById('posterContent');
+                    const originalTransform = canvas.style.transform;
+                    
+                    // Temporarily scale up for high quality export
+                    canvas.style.transform = 'scale(2)';
+                    canvas.style.transformOrigin = 'top left';
+                    
+                    const dataUrl = await html2canvas(canvas, {
+                        width: this.canvasWidth,
+                        height: this.canvasHeight,
+                        scale: 2,
+                        backgroundColor: this.currentBgColor,
+                        useCORS: true,
+                        allowTaint: true
+                    }).then(canvas => canvas.toDataURL('image/png', 1.0));
+                    
+                    // Restore original transform
+                    canvas.style.transform = originalTransform;
+                    
+                    // Create download link
+                    const link = document.createElement('a');
+                    link.download = `typographic-poster-${Date.now()}.png`;
+                    link.href = dataUrl;
+                    link.click();
+                    
+                } catch (error) {
+                    console.error('Export failed:', error);
+                    alert('Export failed. Please try again.');
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            async exportPDF() {
+                this.showLoading('Generating PDF...');
+                
+                try {
+                    const canvas = document.getElementById('posterContent');
+                    
+                    const dataUrl = await html2canvas(canvas, {
+                        width: this.canvasWidth,
+                        height: this.canvasHeight,
+                        scale: 2,
+                        backgroundColor: this.currentBgColor,
+                        useCORS: true,
+                        allowTaint: true
+                    }).then(canvas => canvas.toDataURL('image/png', 1.0));
+                    
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF({
+                        orientation: this.canvasWidth > this.canvasHeight ? 'landscape' : 'portrait',
+                        unit: 'px',
+                        format: [this.canvasWidth, this.canvasHeight]
+                    });
+                    
+                    pdf.addImage(dataUrl, 'PNG', 0, 0, this.canvasWidth, this.canvasHeight);
+                    pdf.save(`typographic-poster-${Date.now()}.pdf`);
+                    
+                } catch (error) {
+                    console.error('PDF export failed:', error);
+                    alert('PDF export failed. Please try again.');
+                } finally {
+                    this.hideLoading();
+                }
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            new TypographicPosterGenerator();
+        });
+    </script>
+</body>
+</html>
