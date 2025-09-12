@@ -1,0 +1,1882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typographic Poster Generator Pro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --secondary: #764ba2;
+            --accent: #ff6b6b;
+            --light: #f8fafc;
+            --dark: #2d3748;
+            --gray: #718096;
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.1);
+            --shadow-medium: 0 12px 40px rgba(0, 0, 0, 0.15);
+            --shadow-strong: 0 20px 60px rgba(0, 0, 0, 0.3);
+            --border-radius: 16px;
+            --border-radius-lg: 24px;
+            --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: var(--dark);
+            overflow-x: hidden;
+            padding: 20px;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 107, 107, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(72, 202, 228, 0.2) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+            height: calc(100vh - 40px);
+        }
+
+        /* Header Styles */
+        .header {
+            grid-column: 1 / -1;
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            border-radius: var(--border-radius);
+            padding: 20px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-soft);
+            position: relative;
+            z-index: 10;
+            border: 1px solid var(--glass-border);
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--primary);
+            opacity: 0.3;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .logo-text {
+            font-size: 28px;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+            position: relative;
+        }
+
+        .logo-text::after {
+            content: '✨';
+            position: absolute;
+            right: -30px;
+            top: -5px;
+            font-size: 18px;
+            animation: sparkle 2s ease-in-out infinite;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.7; }
+            50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            box-shadow: var(--shadow-medium);
+            position: relative;
+            border: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 3px;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            transition: var(--transition-smooth);
+        }
+
+        .section:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 12px 40px rgba(0, 0, 0, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 1);
+        }
+
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: var(--border-radius) var(--border-radius) 0 0;
+            opacity: 0.8;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: -0.3px;
+        }
+
+        .section-title::before {
+            content: "";
+            width: 6px;
+            height: 24px;
+            background: var(--primary);
+            border-radius: 3px;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .section-title i {
+            color: var(--primary);
+            font-size: 18px;
+        }
+
+        /* Canvas Styles */
+        .canvas-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            border-radius: var(--border-radius);
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: var(--shadow-soft);
+            border: 1px solid var(--glass-border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .canvas-container::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 500px;
+            height: 700px;
+            background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            border-radius: var(--border-radius-lg);
+            pointer-events: none;
+        }
+
+        .poster-canvas {
+            width: 420px;
+            height: 630px;
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            border-radius: var(--border-radius);
+            box-shadow: 
+                var(--shadow-strong),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8),
+                0 0 0 1px rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+            transform-origin: center;
+            transition: var(--transition-smooth);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .poster-canvas:hover {
+            transform: scale(1.03) rotateY(5deg);
+            box-shadow: 
+                0 30px 80px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9),
+                0 0 0 1px rgba(255, 255, 255, 0.5);
+        }
+
+        .poster-canvas::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(102, 126, 234, 0.02) 50%, transparent 100%);
+            pointer-events: none;
+            border-radius: inherit;
+        }
+
+        /* Input Styles */
+        .input-group {
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--gray);
+            font-size: 15px;
+            letter-spacing: -0.1px;
+            transition: var(--transition-smooth);
+        }
+
+        .text-input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: var(--transition-smooth);
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            box-shadow: 
+                inset 0 2px 4px rgba(0, 0, 0, 0.02),
+                0 1px 3px rgba(0, 0, 0, 0.05);
+            font-family: inherit;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 
+                0 0 0 4px rgba(102, 126, 234, 0.15),
+                inset 0 2px 4px rgba(0, 0, 0, 0.02),
+                0 4px 12px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+            background: #ffffff;
+        }
+
+        .text-input:hover:not(:focus) {
+            border-color: #cbd5e0;
+            box-shadow: 
+                inset 0 2px 4px rgba(0, 0, 0, 0.02),
+                0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .select-input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 15px;
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            box-shadow: 
+                inset 0 2px 4px rgba(0, 0, 0, 0.02),
+                0 1px 3px rgba(0, 0, 0, 0.05);
+            font-family: inherit;
+            font-weight: 500;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234a5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6,9 12,15 18,9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            background-size: 16px;
+            padding-right: 48px;
+        }
+
+        .select-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 
+                0 0 0 4px rgba(102, 126, 234, 0.15),
+                inset 0 2px 4px rgba(0, 0, 0, 0.02),
+                0 4px 12px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+            background: #ffffff;
+        }
+
+        .select-input:hover:not(:focus) {
+            border-color: #cbd5e0;
+            box-shadow: 
+                inset 0 2px 4px rgba(0, 0, 0, 0.02),
+                0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: linear-gradient(145deg, rgba(248, 250, 252, 0.8) 0%, rgba(255, 255, 255, 0.6) 100%);
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(226, 232, 240, 0.6);
+        }
+
+        .slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #e2e8f0 0%, #cbd5e0 100%);
+            outline: none;
+            position: relative;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .slider:hover {
+            background: linear-gradient(90deg, #cbd5e0 0%, #a0aec0 100%);
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            cursor: pointer;
+            box-shadow: 
+                0 4px 12px rgba(102, 126, 234, 0.4),
+                0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 2px solid white;
+            transition: var(--transition-bounce);
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 
+                0 6px 20px rgba(102, 126, 234, 0.5),
+                0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .slider::-webkit-slider-thumb:active {
+            transform: scale(1.1);
+        }
+
+        .color-input {
+            width: 80px;
+            height: 50px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 
+                0 4px 16px rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transition: var(--transition-bounce);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .color-input::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            pointer-events: none;
+        }
+
+        .color-input:hover {
+            transform: scale(1.1);
+            box-shadow: 
+                0 8px 24px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .color-input:active {
+            transform: scale(1.05);
+        }
+
+        /* Layout Grid */
+        .layout-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .layout-option {
+            aspect-ratio: 2/3;
+            border: 2px solid rgba(226, 232, 240, 0.8);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--transition-bounce);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: #718096;
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .layout-option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            opacity: 0;
+            transition: var(--transition-smooth);
+        }
+
+        .layout-option span {
+            position: relative;
+            z-index: 2;
+        }
+
+        .layout-option:hover:not(.active) {
+            border-color: var(--primary);
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 
+                0 8px 25px rgba(102, 126, 234, 0.2),
+                0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .layout-option:hover:not(.active)::before {
+            opacity: 0.05;
+        }
+
+        .layout-option.active {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 
+                0 12px 30px rgba(102, 126, 234, 0.4),
+                0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .layout-option.active::before {
+            opacity: 1;
+        }
+
+        /* Effect Grid */
+        .effect-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .effect-btn {
+            padding: 12px 16px;
+            border: 2px solid rgba(226, 232, 240, 0.8);
+            border-radius: 10px;
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            transition: var(--transition-bounce);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: #4a5568;
+        }
+
+        .effect-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            opacity: 0;
+            transition: var(--transition-smooth);
+        }
+
+        .effect-btn span {
+            position: relative;
+            z-index: 2;
+        }
+
+        .effect-btn:hover:not(.active) {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.15);
+        }
+
+        .effect-btn:hover:not(.active)::before {
+            opacity: 0.05;
+        }
+
+        .effect-btn.active {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .effect-btn.active::before {
+            opacity: 1;
+        }
+
+        /* Preset Grid */
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .preset-btn {
+            padding: 8px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .preset-btn:hover {
+            border-color: var(--primary);
+            background: #f7fafc;
+        }
+
+        /* Button Styles */
+        .btn {
+            padding: 16px 28px;
+            border: none;
+            border-radius: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition-bounce);
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-family: inherit;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            box-shadow: 
+                0 8px 32px rgba(102, 126, 234, 0.4),
+                0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 
+                0 12px 40px rgba(102, 126, 234, 0.5),
+                0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary:active {
+            transform: translateY(-1px) scale(1.01);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            color: #4a5568;
+            border: 2px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 
+                0 4px 16px rgba(0, 0, 0, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 
+                0 8px 24px rgba(102, 126, 234, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 1);
+            color: var(--primary);
+        }
+
+        .btn-secondary:active {
+            transform: translateY(-1px) scale(1.01);
+        }
+
+        /* Text Elements */
+        .text-element {
+            position: absolute;
+            cursor: move;
+            user-select: none;
+            transition: var(--transition-smooth);
+            word-wrap: break-word;
+            line-height: 1.1;
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.1));
+            max-width: 80%;
+        }
+
+        .text-element:hover {
+            transform: scale(1.02);
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.15));
+        }
+
+        .text-element.selected {
+            outline: 3px dashed var(--primary);
+            outline-offset: 8px;
+            animation: selectedPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes selectedPulse {
+            0%, 100% { outline-color: var(--primary); }
+            50% { outline-color: var(--secondary); }
+        }
+
+        /* Loading Spinner */
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* History Buttons */
+        .undo-redo {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .history-btn {
+            padding: 12px 16px;
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            border: 2px solid rgba(226, 232, 240, 0.8);
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: var(--transition-bounce);
+            color: #4a5568;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .history-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .history-btn:hover:not(:disabled) {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.15);
+            color: var(--primary);
+        }
+
+        .history-btn:hover:not(:disabled)::before {
+            left: 100%;
+        }
+
+        .history-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+            background: #f1f5f9;
+            color: #94a3b8;
+        }
+
+        .history-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 320px 1fr;
+            }
+            
+            .poster-canvas {
+                width: 380px;
+                height: 570px;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto 1fr;
+                height: auto;
+            }
+            
+            .sidebar {
+                height: auto;
+                max-height: 40vh;
+                overflow-y: auto;
+            }
+            
+            .poster-canvas {
+                width: 320px;
+                height: 480px;
+            }
+
+            .export-buttons {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .btn {
+                padding: 14px 20px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 16px 20px;
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .logo-text {
+                font-size: 24px;
+            }
+
+            .export-buttons {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .poster-canvas {
+                width: 280px;
+                height: 420px;
+            }
+
+            .canvas-container {
+                padding: 20px;
+            }
+
+            .layout-grid,
+            .effect-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .preset-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Advanced Controls */
+        .advanced-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .control-btn {
+            padding: 10px;
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            border: 2px solid rgba(226, 232, 240, 0.8);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: var(--transition-bounce);
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .control-btn:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+            color: var(--primary);
+        }
+
+        /* Stats */
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 16px;
+            font-size: 12px;
+            color: var(--gray);
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            color: var(--dark);
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-font"></i>
+                </div>
+                <div class="logo-text">TypoGen Pro</div>
+            </div>
+            <div class="export-buttons">
+                <button class="btn btn-secondary" onclick="generatePreview()">
+                    <i class="fas fa-eye"></i> Preview
+                </button>
+                <button class="btn btn-secondary" onclick="exportPNG()">
+                    <i class="fas fa-image"></i> Export PNG
+                </button>
+                <button class="btn btn-primary" onclick="exportPDF()">
+                    <i class="fas fa-file-pdf"></i> Export PDF
+                </button>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-history"></i> History
+                </div>
+                <div class="undo-redo">
+                    <button class="history-btn" id="undoBtn" onclick="undo()">
+                        <i class="fas fa-undo"></i> Undo
+                    </button>
+                    <button class="history-btn" id="redoBtn" onclick="redo()">
+                        <i class="fas fa-redo"></i> Redo
+                    </button>
+                </div>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div>Changes</div>
+                        <div class="stat-value" id="changesCount">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div>Elements</div>
+                        <div class="stat-value" id="elementsCount">2</div>
+                    </div>
+                    <div class="stat-item">
+                        <div>Version</div>
+                        <div class="stat-value">1.5</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-text-height"></i> Text Content
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Main Text</label>
+                    <textarea class="text-input" id="mainText" rows="3" placeholder="Enter your main text">DESIGN
+MATTERS</textarea>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Subtitle</label>
+                    <input type="text" class="text-input" id="subtitleText" placeholder="Optional subtitle" value="Creative Typography">
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-layer-group"></i> Layout
+                </div>
+                <div class="layout-grid">
+                    <div class="layout-option active" data-layout="centered" onclick="selectLayout('centered')"><span>Centered</span></div>
+                    <div class="layout-option" data-layout="split" onclick="selectLayout('split')"><span>Split</span></div>
+                    <div class="layout-option" data-layout="stacked" onclick="selectLayout('stacked')"><span>Stacked</span></div>
+                    <div class="layout-option" data-layout="diagonal" onclick="selectLayout('diagonal')"><span>Diagonal</span></div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-paint-brush"></i> Typography
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Font Family</label>
+                    <select class="select-input" id="fontFamily">
+                        <option value="'Inter', sans-serif">Inter (Modern)</option>
+                        <option value="'Playfair Display', serif">Playfair Display</option>
+                        <option value="'Montserrat', sans-serif">Montserrat</option>
+                        <option value="'Oswald', sans-serif">Oswald</option>
+                        <option value="'Roboto Condensed', sans-serif">Roboto Condensed</option>
+                        <option value="'Bebas Neue', cursive">Bebas Neue</option>
+                        <option value="'Poppins', sans-serif">Poppins</option>
+                        <option value="'Anton', sans-serif">Anton</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Font Size</label>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="fontSize" min="24" max="120" value="72">
+                        <span id="fontSizeValue">72px</span>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Font Weight</label>
+                    <select class="select-input" id="fontWeight">
+                        <option value="300">Light</option>
+                        <option value="400">Regular</option>
+                        <option value="600">Semi Bold</option>
+                        <option value="700">Bold</option>
+                        <option value="900" selected>Black</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Letter Spacing</label>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="letterSpacing" min="-5" max="20" value="2">
+                        <span id="letterSpacingValue">2px</span>
+                    </div>
+                </div>
+                <div class="advanced-controls">
+                    <button class="control-btn" onclick="toggleTextTransform('uppercase')">
+                        <i class="fas fa-text-height"></i> Uppercase
+                    </button>
+                    <button class="control-btn" onclick="toggleTextTransform('lowercase')">
+                        <i class="fas fa-text-height"></i> Lowercase
+                    </button>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-palette"></i> Colors
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Text Color</label>
+                    <input type="color" class="color-input" id="textColor" value="#2d3748">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Background Color</label>
+                    <input type="color" class="color-input" id="backgroundColor" value="#ffffff">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Accent Color</label>
+                    <input type="color" class="color-input" id="accentColor" value="#667eea">
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-swatchbook"></i> Color Presets
+                </div>
+                <div class="preset-grid">
+                    <button class="preset-btn" onclick="applyColorPreset('#000000', '#ffffff', '#ff6b6b')">Classic</button>
+                    <button class="preset-btn" onclick="applyColorPreset('#ffffff', '#2d3748', '#667eea')">Modern</button>
+                    <button class="preset-btn" onclick="applyColorPreset('#2d3748', '#f7fafc', '#38b2ac')">Minimal</button>
+                    <button class="preset-btn" onclick="applyColorPreset('#ffd700', '#1a202c', '#ff6b6b')">Bold</button>
+                    <button class="preset-btn" onclick="applyColorPreset('#e53e3e', '#fff5f5', '#2d3748')">Warm</button>
+                    <button class="preset-btn" onclick="applyColorPreset('#ffffff', '#2c5282', '#90cdf4')">Cool</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-magic"></i> Effects
+                </div>
+                <div class="effect-grid">
+                    <button class="effect-btn" data-effect="none" onclick="toggleEffect('none')"><span>None</span></button>
+                    <button class="effect-btn" data-effect="shadow" onclick="toggleEffect('shadow')"><span>Shadow</span></button>
+                    <button class="effect-btn" data-effect="outline" onclick="toggleEffect('outline')"><span>Outline</span></button>
+                    <button class="effect-btn" data-effect="gradient" onclick="toggleEffect('gradient')"><span>Gradient</span></button>
+                </div>
+                <div class="advanced-controls" style="margin-top: 12px;">
+                    <button class="control-btn" onclick="addTextElement()">
+                        <i class="fas fa-plus"></i> Add Text
+                    </button>
+                    <button class="control-btn" onclick="removeSelectedElement()">
+                        <i class="fas fa-trash"></i> Remove
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <div class="poster-canvas" id="posterCanvas">
+                <div class="text-element" id="mainTextElement" style="font-family: 'Inter', sans-serif; font-size: 72px; font-weight: 900; color: #2d3748; top: 200px; left: 50%; transform: translateX(-50%); text-align: center; letter-spacing: 2px;">
+                    DESIGN<br>MATTERS
+                </div>
+                <div class="text-element" id="subtitleElement" style="font-family: 'Inter', sans-serif; font-size: 24px; font-weight: 400; color: #718096; top: 380px; left: 50%; transform: translateX(-50%); text-align: center;">
+                    Creative Typography
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Google Fonts loading
+        const fonts = [
+            'Inter:300,400,600,700,900',
+            'Playfair+Display:400,700,900',
+            'Montserrat:300,400,600,700,900',
+            'Oswald:300,400,600,700',
+            'Roboto+Condensed:300,400,700',
+            'Bebas+Neue:400',
+            'Poppins:300,400,600,700,900',
+            'Anton:400'
+        ];
+        
+        const link = document.createElement('link');
+        link.href = `https://fonts.googleapis.com/css2?${fonts.map(f => `family=${f}`).join('&')}&display=swap`;
+        link.rel = 'stylesheet';
+        document.head.appendChild(link);
+
+        // State management
+        let currentLayout = 'centered';
+        let currentEffect = 'none';
+        let selectedElement = null;
+        let history = [];
+        let historyIndex = -1;
+        let changeCount = 0;
+        let textElements = ['mainTextElement', 'subtitleElement'];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            saveState();
+            updateCanvas();
+            updateStats();
+        });
+
+        function setupEventListeners() {
+            // Text inputs
+            document.getElementById('mainText').addEventListener('input', updateMainText);
+            document.getElementById('subtitleText').addEventListener('input', updateSubtitle);
+            
+            // Typography controls
+            document.getElementById('fontFamily').addEventListener('change', updateTypography);
+            document.getElementById('fontSize').addEventListener('input', updateFontSize);
+            document.getElementById('fontWeight').addEventListener('change', updateTypography);
+            document.getElementById('letterSpacing').addEventListener('input', updateLetterSpacing);
+            
+            // Color controls
+            document.getElementById('textColor').addEventListener('change', updateColors);
+            document.getElementById('backgroundColor').addEventListener('change', updateColors);
+            document.getElementById('accentColor').addEventListener('change', updateColors);
+
+            // Make text elements draggable
+            makeDraggable('mainTextElement');
+            makeDraggable('subtitleElement');
+        }
+
+        function saveState() {
+            const state = {
+                mainText: document.getElementById('mainText').value,
+                subtitleText: document.getElementById('subtitleText').value,
+                layout: currentLayout,
+                effect: currentEffect,
+                fontSize: document.getElementById('fontSize').value,
+                fontFamily: document.getElementById('fontFamily').value,
+                fontWeight: document.getElementById('fontWeight').value,
+                letterSpacing: document.getElementById('letterSpacing').value,
+                textColor: document.getElementById('textColor').value,
+                backgroundColor: document.getElementById('backgroundColor').value,
+                accentColor: document.getElementById('accentColor').value,
+                mainTextPosition: {
+                    top: document.getElementById('mainTextElement').style.top,
+                    left: document.getElementById('mainTextElement').style.left,
+                    transform: document.getElementById('mainTextElement').style.transform
+                },
+                subtitlePosition: {
+                    top: document.getElementById('subtitleElement').style.top,
+                    left: document.getElementById('subtitleElement').style.left,
+                    transform: document.getElementById('subtitleElement').style.transform
+                }
+            };
+            
+            // Remove future history if we're not at the end
+            if (historyIndex < history.length - 1) {
+                history = history.slice(0, historyIndex + 1);
+            }
+            
+            history.push(JSON.parse(JSON.stringify(state)));
+            historyIndex = history.length - 1;
+            
+            // Limit history size
+            if (history.length > 50) {
+                history.shift();
+                historyIndex--;
+            }
+            
+            updateHistoryButtons();
+            changeCount++;
+            updateStats();
+        }
+
+        function undo() {
+            if (historyIndex > 0) {
+                historyIndex--;
+                restoreState(history[historyIndex]);
+                updateHistoryButtons();
+            }
+        }
+
+        function redo() {
+            if (historyIndex < history.length - 1) {
+                historyIndex++;
+                restoreState(history[historyIndex]);
+                updateHistoryButtons();
+            }
+        }
+
+        function updateHistoryButtons() {
+            document.getElementById('undoBtn').disabled = historyIndex <= 0;
+            document.getElementById('redoBtn').disabled = historyIndex >= history.length - 1;
+        }
+
+        function updateStats() {
+            document.getElementById('changesCount').textContent = changeCount;
+            document.getElementById('elementsCount').textContent = textElements.length;
+        }
+
+        function restoreState(state) {
+            document.getElementById('mainText').value = state.mainText;
+            document.getElementById('subtitleText').value = state.subtitleText;
+            document.getElementById('fontSize').value = state.fontSize;
+            document.getElementById('fontFamily').value = state.fontFamily;
+            document.getElementById('fontWeight').value = state.fontWeight;
+            document.getElementById('letterSpacing').value = state.letterSpacing;
+            document.getElementById('textColor').value = state.textColor;
+            document.getElementById('backgroundColor').value = state.backgroundColor;
+            document.getElementById('accentColor').value = state.accentColor;
+            
+            currentLayout = state.layout;
+            currentEffect = state.effect;
+            
+            // Update UI
+            document.getElementById('fontSizeValue').textContent = state.fontSize + 'px';
+            document.getElementById('letterSpacingValue').textContent = state.letterSpacing + 'px';
+            
+            // Update layout selection
+            document.querySelectorAll('.layout-option').forEach(opt => {
+                opt.classList.toggle('active', opt.dataset.layout === currentLayout);
+            });
+            
+            // Update effect selection
+            document.querySelectorAll('.effect-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.effect === currentEffect);
+            });
+            
+            updateCanvas();
+        }
+
+        function updateMainText() {
+            const text = document.getElementById('mainText').value || 'DESIGN\nMATTERS';
+            document.getElementById('mainTextElement').innerHTML = text.replace(/\n/g, '<br>');
+            updateCanvas();
+            saveState();
+        }
+
+        function updateSubtitle() {
+            const text = document.getElementById('subtitleText').value || 'Creative Typography';
+            document.getElementById('subtitleElement').textContent = text;
+            updateCanvas();
+            saveState();
+        }
+
+        function updateFontSize() {
+            const size = document.getElementById('fontSize').value;
+            document.getElementById('fontSizeValue').textContent = size + 'px';
+            updateTypography();
+        }
+
+        function updateLetterSpacing() {
+            const spacing = document.getElementById('letterSpacing').value;
+            document.getElementById('letterSpacingValue').textContent = spacing + 'px';
+            updateTypography();
+        }
+
+        function updateTypography() {
+            const fontFamily = document.getElementById('fontFamily').value;
+            const fontSize = document.getElementById('fontSize').value;
+            const fontWeight = document.getElementById('fontWeight').value;
+            const letterSpacing = document.getElementById('letterSpacing').value;
+            
+            const mainElement = document.getElementById('mainTextElement');
+            const subtitleElement = document.getElementById('subtitleElement');
+            
+            mainElement.style.fontFamily = fontFamily;
+            mainElement.style.fontSize = fontSize + 'px';
+            mainElement.style.fontWeight = fontWeight;
+            mainElement.style.letterSpacing = letterSpacing + 'px';
+            
+            subtitleElement.style.fontFamily = fontFamily;
+            subtitleElement.style.fontWeight = Math.min(fontWeight, 600);
+            
+            updateCanvas();
+            saveState();
+        }
+
+        function updateColors() {
+            const textColor = document.getElementById('textColor').value;
+            const backgroundColor = document.getElementById('backgroundColor').value;
+            const accentColor = document.getElementById('accentColor').value;
+            
+            document.getElementById('posterCanvas').style.background = backgroundColor;
+            document.getElementById('mainTextElement').style.color = textColor;
+            document.getElementById('subtitleElement').style.color = textColor + '99';
+            
+            updateCanvas();
+            saveState();
+        }
+
+        function applyColorPreset(text, background, accent) {
+            document.getElementById('textColor').value = text;
+            document.getElementById('backgroundColor').value = background;
+            document.getElementById('accentColor').value = accent;
+            updateColors();
+        }
+
+        function selectLayout(layout) {
+            currentLayout = layout;
+            
+            document.querySelectorAll('.layout-option').forEach(opt => {
+                opt.classList.toggle('active', opt.dataset.layout === layout);
+            });
+            
+            applyLayout(layout);
+            saveState();
+        }
+
+        function applyLayout(layout) {
+            const mainElement = document.getElementById('mainTextElement');
+            const subtitleElement = document.getElementById('subtitleElement');
+            
+            switch(layout) {
+                case 'centered':
+                    mainElement.style.top = '200px';
+                    mainElement.style.left = '50%';
+                    mainElement.style.transform = 'translateX(-50%)';
+                    mainElement.style.textAlign = 'center';
+                    subtitleElement.style.top = '380px';
+                    subtitleElement.style.left = '50%';
+                    subtitleElement.style.transform = 'translateX(-50%)';
+                    subtitleElement.style.textAlign = 'center';
+                    break;
+                case 'split':
+                    mainElement.style.top = '100px';
+                    mainElement.style.left = '30px';
+                    mainElement.style.transform = 'none';
+                    mainElement.style.textAlign = 'left';
+                    subtitleElement.style.top = '450px';
+                    subtitleElement.style.left = '30px';
+                    subtitleElement.style.transform = 'none';
+                    subtitleElement.style.textAlign = 'left';
+                    break;
+                case 'stacked':
+                    mainElement.style.top = '50px';
+                    mainElement.style.left = '50%';
+                    mainElement.style.transform = 'translateX(-50%)';
+                    mainElement.style.textAlign = 'center';
+                    subtitleElement.style.top = '500px';
+                    subtitleElement.style.left = '50%';
+                    subtitleElement.style.transform = 'translateX(-50%)';
+                    subtitleElement.style.textAlign = 'center';
+                    break;
+                case 'diagonal':
+                    mainElement.style.top = '120px';
+                    mainElement.style.left = '30px';
+                    mainElement.style.transform = 'rotate(-5deg)';
+                    mainElement.style.textAlign = 'left';
+                    subtitleElement.style.top = '420px';
+                    subtitleElement.style.left = '250px';
+                    subtitleElement.style.transform = 'rotate(5deg)';
+                    subtitleElement.style.textAlign = 'right';
+                    break;
+            }
+        }
+
+        function toggleEffect(effect) {
+            currentEffect = effect;
+            
+            document.querySelectorAll('.effect-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.effect === effect);
+            });
+            
+            applyEffect(effect);
+            saveState();
+        }
+
+        function applyEffect(effect) {
+            const mainElement = document.getElementById('mainTextElement');
+            const subtitleElement = document.getElementById('subtitleElement');
+            const accentColor = document.getElementById('accentColor').value;
+            
+            // Reset effects
+            mainElement.style.textShadow = '';
+            mainElement.style.webkitTextStroke = '';
+            mainElement.style.background = '';
+            mainElement.style.webkitBackgroundClip = '';
+            mainElement.style.webkitTextFillColor = '';
+            mainElement.style.backgroundClip = '';
+            
+            switch(effect) {
+                case 'shadow':
+                    mainElement.style.textShadow = `4px 4px 8px ${accentColor}40, 8px 8px 16px ${accentColor}20`;
+                    subtitleElement.style.textShadow = `2px 2px 4px ${accentColor}30`;
+                    break;
+                case 'outline':
+                    mainElement.style.webkitTextStroke = `2px ${accentColor}`;
+                    mainElement.style.color = 'transparent';
+                    break;
+                case 'gradient':
+                    mainElement.style.background = `linear-gradient(135deg, ${document.getElementById('textColor').value}, ${accentColor})`;
+                    mainElement.style.webkitBackgroundClip = 'text';
+                    mainElement.style.webkitTextFillColor = 'transparent';
+                    mainElement.style.backgroundClip = 'text';
+                    break;
+                case 'none':
+                default:
+                    mainElement.style.color = document.getElementById('textColor').value;
+                    break;
+            }
+        }
+
+        function toggleTextTransform(transform) {
+            const mainElement = document.getElementById('mainTextElement');
+            if (mainElement.style.textTransform === transform) {
+                mainElement.style.textTransform = 'none';
+            } else {
+                mainElement.style.textTransform = transform;
+            }
+            saveState();
+        }
+
+        function makeDraggable(elementId) {
+            const element = document.getElementById(elementId);
+            let isDragging = false;
+            let startX, startY, startLeft, startTop;
+            
+            element.addEventListener('mousedown', function(e) {
+                isDragging = true;
+                selectedElement = element;
+                element.classList.add('selected');
+                
+                // Remove selection from other elements
+                document.querySelectorAll('.text-element').forEach(el => {
+                    if (el !== element) el.classList.remove('selected');
+                });
+                
+                startX = e.clientX;
+                startY = e.clientY;
+                
+                const rect = element.getBoundingClientRect();
+                const canvasRect = document.getElementById('posterCanvas').getBoundingClientRect();
+                startLeft = rect.left - canvasRect.left;
+                startTop = rect.top - canvasRect.top;
+                
+                e.preventDefault();
+            });
+            
+            document.addEventListener('mousemove', function(e) {
+                if (!isDragging || selectedElement !== element) return;
+                
+                const deltaX = e.clientX - startX;
+                const deltaY = e.clientY - startY;
+                
+                const newLeft = startLeft + deltaX;
+                const newTop = startTop + deltaY;
+                
+                element.style.left = newLeft + 'px';
+                element.style.top = newTop + 'px';
+                element.style.transform = 'none';
+            });
+            
+            document.addEventListener('mouseup', function() {
+                if (isDragging) {
+                    isDragging = false;
+                    saveState();
+                }
+            });
+        }
+
+        function updateCanvas() {
+            applyLayout(currentLayout);
+            applyEffect(currentEffect);
+        }
+
+        function addTextElement() {
+            const canvas = document.getElementById('posterCanvas');
+            const newId = 'textElement' + Date.now();
+            
+            const newElement = document.createElement('div');
+            newElement.className = 'text-element';
+            newElement.id = newId;
+            newElement.style.position = 'absolute';
+            newElement.style.top = '50%';
+            newElement.style.left = '50%';
+            newElement.style.transform = 'translate(-50%, -50%)';
+            newElement.style.fontFamily = document.getElementById('fontFamily').value;
+            newElement.style.fontSize = '24px';
+            newElement.style.fontWeight = '400';
+            newElement.style.color = document.getElementById('textColor').value;
+            newElement.style.textAlign = 'center';
+            newElement.textContent = 'New Text';
+            
+            canvas.appendChild(newElement);
+            textElements.push(newId);
+            makeDraggable(newId);
+            updateStats();
+            saveState();
+        }
+
+        function removeSelectedElement() {
+            if (selectedElement && selectedElement.id !== 'mainTextElement') {
+                const elementId = selectedElement.id;
+                selectedElement.remove();
+                
+                // Remove from textElements array
+                const index = textElements.indexOf(elementId);
+                if (index !== -1) {
+                    textElements.splice(index, 1);
+                }
+                
+                selectedElement = null;
+                updateStats();
+                saveState();
+            }
+        }
+
+        function generatePreview() {
+            const canvas = document.getElementById('posterCanvas');
+            const previewWindow = window.open('', '_blank', 'width=600,height=800');
+            
+            previewWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Poster Preview</title>
+                    <style>
+                        body { margin: 0; padding: 20px; background: #f5f5f5; font-family: Arial, sans-serif; }
+                        .preview-container { max-width: 500px; margin: 0 auto; }
+                        .preview-canvas { ${canvas.style.cssText} width: 100%; height: auto; aspect-ratio: 2/3; }
+                    </style>
+                    <link href="https://fonts.googleapis.com/css2?${fonts.map(f => `family=${f}`).join('&')}&display=swap" rel="stylesheet">
+                </head>
+                <body>
+                    <div class="preview-container">
+                        <h2>Poster Preview</h2>
+                        <div class="preview-canvas">${canvas.innerHTML}</div>
+                    </div>
+                </body>
+                </html>
+            `);
+            previewWindow.document.close();
+        }
+
+        async function exportPNG() {
+            const loading = document.getElementById('loading');
+            loading.style.display = 'flex';
+            
+            try {
+                const canvas = document.getElementById('posterCanvas');
+                
+                // Create a higher resolution version for export
+                const exportCanvas = canvas.cloneNode(true);
+                exportCanvas.style.width = '800px';
+                exportCanvas.style.height = '1200px';
+                exportCanvas.style.position = 'absolute';
+                exportCanvas.style.left = '-9999px';
+                document.body.appendChild(exportCanvas);
+                
+                // Scale up text elements
+                const textElements = exportCanvas.querySelectorAll('.text-element');
+                textElements.forEach(el => {
+                    const currentSize = parseInt(el.style.fontSize) || 24;
+                    el.style.fontSize = (currentSize * 2) + 'px';
+                    
+                    const currentTop = parseInt(el.style.top) || 0;
+                    const currentLeft = parseInt(el.style.left) || 0;
+                    el.style.top = (currentTop * 2) + 'px';
+                    el.style.left = (currentLeft * 2) + 'px';
+                    
+                    if (el.style.letterSpacing) {
+                        const currentSpacing = parseInt(el.style.letterSpacing) || 0;
+                        el.style.letterSpacing = (currentSpacing * 2) + 'px';
+                    }
+                });
+                
+                const canvas2d = await html2canvas(exportCanvas, {
+                    width: 800,
+                    height: 1200,
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: null
+                });
+                
+                document.body.removeChild(exportCanvas);
+                
+                // Download
+                const link = document.createElement('a');
+                link.download = 'typographic-poster.png';
+                link.href = canvas2d.toDataURL('image/png');
+                link.click();
+                
+            } catch (error) {
+                console.error('Export failed:', error);
+                alert('Export failed. Please try again.');
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        async function exportPDF() {
+            const loading = document.getElementById('loading');
+            loading.style.display = 'flex';
+            
+            try {
+                const canvas = document.getElementById('posterCanvas');
+                
+                // Create high-res version
+                const exportCanvas = canvas.cloneNode(true);
+                exportCanvas.style.width = '800px';
+                exportCanvas.style.height = '1200px';
+                exportCanvas.style.position = 'absolute';
+                exportCanvas.style.left = '-9999px';
+                document.body.appendChild(exportCanvas);
+                
+                // Scale up elements
+                const textElements = exportCanvas.querySelectorAll('.text-element');
+                textElements.forEach(el => {
+                    const currentSize = parseInt(el.style.fontSize) || 24;
+                    el.style.fontSize = (currentSize * 2) + 'px';
+                    
+                    const currentTop = parseInt(el.style.top) || 0;
+                    const currentLeft = parseInt(el.style.left) || 0;
+                    el.style.top = (currentTop * 2) + 'px';
+                    el.style.left = (currentLeft * 2) + 'px';
+                    
+                    if (el.style.letterSpacing) {
+                        const currentSpacing = parseInt(el.style.letterSpacing) || 0;
+                        el.style.letterSpacing = (currentSpacing * 2) + 'px';
+                    }
+                });
+                
+                const canvas2d = await html2canvas(exportCanvas, {
+                    width: 800,
+                    height: 1200,
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true
+                });
+                
+                document.body.removeChild(exportCanvas);
+                
+                // Create PDF
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: [210, 297] // A4
+                });
+                
+                const imgData = canvas2d.toDataURL('image/png');
+                const imgWidth = 140;
+                const imgHeight = 210;
+                const x = (210 - imgWidth) / 2;
+                const y = (297 - imgHeight) / 2;
+                
+                pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+                pdf.save('typographic-poster.pdf');
+                
+            } catch (error) {
+                console.error('PDF export failed:', error);
+                alert('PDF export failed. Please try again.');
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'z':
+                        e.preventDefault();
+                        if (e.shiftKey) {
+                            redo();
+                        } else {
+                            undo();
+                        }
+                        break;
+                    case 'y':
+                        e.preventDefault();
+                        redo();
+                        break;
+                    case 's':
+                        e.preventDefault();
+                        exportPNG();
+                        break;
+                    case 'p':
+                        e.preventDefault();
+                        exportPDF();
+                        break;
+                }
+            }
+        });
+
+        // Auto-save functionality
+        let autoSaveTimeout;
+        function scheduleAutoSave() {
+            clearTimeout(autoSaveTimeout);
+            autoSaveTimeout = setTimeout(() => {
+                const state = {
+                    mainText: document.getElementById('mainText').value,
+                    subtitleText: document.getElementById('subtitleText').value,
+                    layout: currentLayout,
+                    effect: currentEffect,
+                    fontSize: document.getElementById('fontSize').value,
+                    fontFamily: document.getElementById('fontFamily').value,
+                    fontWeight: document.getElementById('fontWeight').value,
+                    letterSpacing: document.getElementById('letterSpacing').value,
+                    textColor: document.getElementById('textColor').value,
+                    backgroundColor: document.getElementById('backgroundColor').value,
+                    accentColor: document.getElementById('accentColor').value
+                };
+                
+                try {
+                    sessionStorage.setItem('posterState', JSON.stringify(state));
+                } catch (e) {
+                    console.log('Auto-save not available');
+                }
+            }, 1000);
+        }
+
+        // Load saved state on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                const saved = sessionStorage.getItem('posterState');
+                if (saved) {
+                    const state = JSON.parse(saved);
+                    
+                    document.getElementById('mainText').value = state.mainText || 'DESIGN\nMATTERS';
+                    document.getElementById('subtitleText').value = state.subtitleText || 'Creative Typography';
+                    document.getElementById('fontSize').value = state.fontSize || '72';
+                    document.getElementById('fontFamily').value = state.fontFamily || "'Inter', sans-serif";
+                    document.getElementById('fontWeight').value = state.fontWeight || '900';
+                    document.getElementById('letterSpacing').value = state.letterSpacing || '2';
+                    document.getElementById('textColor').value = state.textColor || '#2d3748';
+                    document.getElementById('backgroundColor').value = state.backgroundColor || '#ffffff';
+                    document.getElementById('accentColor').value = state.accentColor || '#667eea';
+                    
+                    currentLayout = state.layout || 'centered';
+                    currentEffect = state.effect || 'none';
+                    
+                    updateMainText();
+                    updateSubtitle();
+                    updateTypography();
+                    updateColors();
+                    selectLayout(currentLayout);
+                    toggleEffect(currentEffect);
+                }
+            } catch (e) {
+                console.log('No saved state found');
+            }
+        });
+
+        // Add auto-save to all inputs
+        document.querySelectorAll('input, select, textarea').forEach(input => {
+            input.addEventListener('input', scheduleAutoSave);
+            input.addEventListener('change', scheduleAutoSave);
+        });
+
+        // Performance optimization: debounce updates
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Apply debouncing to expensive operations
+        const debouncedUpdateCanvas = debounce(updateCanvas, 100);
+        const debouncedSaveState = debounce(saveState, 300);
+
+        // Quality of life improvements
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.text-element')) {
+                document.querySelectorAll('.text-element').forEach(el => {
+                    el.classList.remove('selected');
+                });
+                selectedElement = null;
+            }
+        });
+
+        // Add visual feedback for interactions
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 150);
+            });
+        });
+
+        console.log('🎨 Typographic Poster Generator Pro - Ready!');
+        console.log('💡 Keyboard shortcuts:');
+        console.log('   Ctrl+Z: Undo');
+        console.log('   Ctrl+Y: Redo');
+        console.log('   Ctrl+S: Export PNG');
+        console.log('   Ctrl+P: Export PDF');
+    </script>
+</body>
+</html>
