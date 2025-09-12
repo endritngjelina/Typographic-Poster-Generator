@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typographic Poster Generator - Pro Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&family=Oswald:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700;800;900&family=Bebas+Neue&family=Source+Sans+Pro:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 320px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, #ff6b6b, #ffa726);
+            color: white;
+        }
+
+        .sidebar-header h1 {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .control-section {
+            padding: 20px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+
+        .control-group {
+            margin-bottom: 16px;
+        }
+
+        .control-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .control-input, .control-select, .control-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .control-input:focus, .control-select:focus, .control-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .control-textarea {
+            min-height: 80px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .layout-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .layout-option {
+            aspect-ratio: 1;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .layout-option:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .layout-option.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .layout-option::after {
+            content: attr(data-name);
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .color-picker-container {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .color-option {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .color-option.active {
+            border-color: #2d3748;
+            transform: scale(1.1);
+        }
+
+        .color-option.custom {
+            background: conic-gradient(from 0deg, #ff0000, #ff8000, #ffff00, #80ff00, #00ff00, #00ff80, #00ffff, #0080ff, #0000ff, #8000ff, #ff00ff, #ff0080, #ff0000);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .range-slider {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: #e2e8f0;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 8px;
+            padding: 20px;
+        }
+
+        .export-btn {
+            flex: 1;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .export-btn.primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .export-btn.secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Canvas Area */
+        .canvas-area {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            position: relative;
+        }
+
+        .canvas-container {
+            position: relative;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .canvas-container:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.15);
+        }
+
+        .poster-canvas {
+            width: 600px;
+            height: 800px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+        }
+
+        .poster-content {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transition: all 0.5s ease;
+        }
+
+        /* Layout Styles */
+        .layout-centered {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .layout-left {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            text-align: left;
+        }
+
+        .layout-split {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+        }
+
+        .layout-diagonal {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transform: rotate(-5deg);
+        }
+
+        .layout-minimal {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            text-align: center;
+            padding-bottom: 10%;
+        }
+
+        .layout-bold {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: center;
+            text-align: center;
+        }
+
+        /* Typography Styles */
+        .main-text {
+            font-size: 72px;
+            font-weight: 900;
+            line-height: 0.9;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            word-wrap: break-word;
+            hyphens: auto;
+        }
+
+        .sub-text {
+            font-size: 24px;
+            font-weight: 400;
+            opacity: 0.8;
+            transition: all 0.3s ease;
+        }
+
+        /* Effects */
+        .effect-shadow {
+            text-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .effect-outline {
+            -webkit-text-stroke: 2px currentColor;
+            color: transparent;
+        }
+
+        .effect-gradient {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .effect-glow {
+            text-shadow: 0 0 20px currentColor, 0 0 40px currentColor, 0 0 60px currentColor;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 280px;
+            }
+            
+            .poster-canvas {
+                width: 450px;
+                height: 600px;
+                padding: 40px;
+            }
+            
+            .main-text {
+                font-size: 54px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 50vh;
+            }
+            
+            .canvas-area {
+                padding: 20px;
+            }
+            
+            .poster-canvas {
+                width: 300px;
+                height: 400px;
+                padding: 30px;
+            }
+            
+            .main-text {
+                font-size: 36px;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Premium Features Indicator */
+        .premium-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #2d3748;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Controls -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1>Typographic Studio</h1>
+                <p>Professional poster design made simple</p>
+            </div>
+
+            <!-- Text Content Section -->
+            <div class="control-section">
+                <h3 class="section-title">Content</h3>
+                <div class="control-group">
+                    <label class="control-label">Main Text</label>
+                    <textarea class="control-textarea" id="mainText" placeholder="Your bold statement here...">CREATIVE VISION</textarea>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Subtitle</label>
+                    <input type="text" class="control-input" id="subText" placeholder="Supporting text..." value="Designing Tomorrow">
+                </div>
+            </div>
+
+            <!-- Layout Section -->
+            <div class="control-section">
+                <h3 class="section-title">Layout <span class="premium-badge">Pro</span></h3>
+                <div class="layout-grid">
+                    <div class="layout-option active" data-layout="centered" data-name="Center">📍</div>
+                    <div class="layout-option" data-layout="left" data-name="Left">◀️</div>
+                    <div class="layout-option" data-layout="split" data-name="Split">⬍</div>
+                    <div class="layout-option" data-layout="diagonal" data-name="Angle">↗️</div>
+                    <div class="layout-option" data-layout="minimal" data-name="Minimal">▫️</div>
+                    <div class="layout-option" data-layout="bold" data-name="Bold">▣</div>
+                </div>
+            </div>
+
+            <!-- Typography Section -->
+            <div class="control-section">
+                <h3 class="section-title">Typography</h3>
+                <div class="control-group">
+                    <label class="control-label">Font Family</label>
+                    <select class="control-select" id="fontFamily">
+                        <option value="Inter">Inter - Modern Sans</option>
+                        <option value="Playfair Display">Playfair - Elegant Serif</option>
+                        <option value="Oswald">Oswald - Strong Sans</option>
+                        <option value="Montserrat">Montserrat - Versatile</option>
+                        <option value="Bebas Neue">Bebas Neue - Impact</option>
+                        <option value="Source Sans Pro">Source Sans - Clean</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Font Size: <span id="fontSizeValue">72px</span></label>
+                    <input type="range" class="range-slider" id="fontSize" min="24" max="120" value="72">
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Font Weight</label>
+                    <select class="control-select" id="fontWeight">
+                        <option value="300">Light (300)</option>
+                        <option value="400">Regular (400)</option>
+                        <option value="500">Medium (500)</option>
+                        <option value="600">Semibold (600)</option>
+                        <option value="700">Bold (700)</option>
+                        <option value="800">Extra Bold (800)</option>
+                        <option value="900" selected>Black (900)</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Letter Spacing: <span id="letterSpacingValue">0px</span></label>
+                    <input type="range" class="range-slider" id="letterSpacing" min="-5" max="20" value="0">
+                </div>
+            </div>
+
+            <!-- Colors Section -->
+            <div class="control-section">
+                <h3 class="section-title">Colors</h3>
+                <div class="control-group">
+                    <label class="control-label">Background Color</label>
+                    <div class="color-picker-container">
+                        <div class="color-option active" data-color="#ffffff" style="background: #ffffff; border: 1px solid #ddd;"></div>
+                        <div class="color-option" data-color="#000000" style="background: #000000;"></div>
+                        <div class="color-option" data-color="#667eea" style="background: #667eea;"></div>
+                        <div class="color-option" data-color="#764ba2" style="background: #764ba2;"></div>
+                        <div class="color-option" data-color="#ff6b6b" style="background: #ff6b6b;"></div>
+                        <div class="color-option custom" data-color="custom">+</div>
+                    </div>
+                    <input type="color" id="customBgColor" style="display: none;" value="#ffffff">
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Text Color</label>
+                    <div class="color-picker-container">
+                        <div class="color-option" data-color="#ffffff" style="background: #ffffff; border: 1px solid #ddd;"></div>
+                        <div class="color-option active" data-color="#000000" style="background: #000000;"></div>
+                        <div class="color-option" data-color="#667eea" style="background: #667eea;"></div>
+                        <div class="color-option" data-color="#764ba2" style="background: #764ba2;"></div>
+                        <div class="color-option" data-color="#ff6b6b" style="background: #ff6b6b;"></div>
+                        <div class="color-option custom" data-color="custom">+</div>
+                    </div>
+                    <input type="color" id="customTextColor" style="display: none;" value="#000000">
+                </div>
+            </div>
+
+            <!-- Effects Section -->
+            <div class="control-section">
+                <h3 class="section-title">Effects <span class="premium-badge">Pro</span></h3>
+                <div class="control-group">
+                    <label class="control-label">Text Effect</label>
+                    <select class="control-select" id="textEffect">
+                        <option value="">None</option>
+                        <option value="shadow">Drop Shadow</option>
+                        <option value="outline">Outline</option>
+                        <option value="gradient">Gradient</option>
+                        <option value="glow">Glow</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Opacity: <span id="opacityValue">100%</span></label>
+                    <input type="range" class="range-slider" id="opacity" min="10" max="100" value="100">
+                </div>
+            </div>
+
+            <!-- Export Section -->
+            <div class="export-buttons">
+                <button class="export-btn primary" id="exportPNG">
+                    <span id="pngText">Export PNG</span>
+                </button>
+                <button class="export-btn secondary" id="exportPDF">
+                    <span id="pdfText">Export PDF</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Canvas Area -->
+        <div class="canvas-area">
+            <div class="canvas-container">
+                <div class="poster-canvas" id="posterCanvas">
+                    <div class="poster-content layout-centered" id="posterContent">
+                        <div class="main-text" id="mainTextDisplay">CREATIVE VISION</div>
+                        <div class="sub-text" id="subTextDisplay">Designing Tomorrow</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class TypographicPosterGenerator {
+            constructor() {
+                this.currentLayout = 'centered';
+                this.currentBgColor = '#ffffff';
+                this.currentTextColor = '#000000';
+                this.initializeElements();
+                this.bindEvents();
+                this.updateDisplay();
+            }
+
+            initializeElements() {
+                // Get all DOM elements
+                this.elements = {
+                    mainText: document.getElementById('mainText'),
+                    subText: document.getElementById('subText'),
+                    mainTextDisplay: document.getElementById('mainTextDisplay'),
+                    subTextDisplay: document.getElementById('subTextDisplay'),
+                    posterContent: document.getElementById('posterContent'),
+                    posterCanvas: document.getElementById('posterCanvas'),
+                    fontFamily: document.getElementById('fontFamily'),
+                    fontSize: document.getElementById('fontSize'),
+                    fontSizeValue: document.getElementById('fontSizeValue'),
+                    fontWeight: document.getElementById('fontWeight'),
+                    letterSpacing: document.getElementById('letterSpacing'),
+                    letterSpacingValue: document.getElementById('letterSpacingValue'),
+                    textEffect: document.getElementById('textEffect'),
+                    opacity: document.getElementById('opacity'),
+                    opacityValue: document.getElementById('opacityValue'),
+                    customBgColor: document.getElementById('customBgColor'),
+                    customTextColor: document.getElementById('customTextColor'),
+                    exportPNG: document.getElementById('exportPNG'),
+                    exportPDF: document.getElementById('exportPDF'),
+                    pngText: document.getElementById('pngText'),
+                    pdfText: document.getElementById('pdfText')
+                };
+            }
+
+            bindEvents() {
+                // Text content events
+                this.elements.mainText.addEventListener('input', () => this.updateDisplay());
+                this.elements.subText.addEventListener('input', () => this.updateDisplay());
+
+                // Typography events
+                this.elements.fontFamily.addEventListener('change', () => this.updateDisplay());
+                this.elements.fontSize.addEventListener('input', () => this.updateFontSize());
+                this.elements.fontWeight.addEventListener('change', () => this.updateDisplay());
+                this.elements.letterSpacing.addEventListener('input', () => this.updateLetterSpacing());
+                this.elements.textEffect.addEventListener('change', () => this.updateDisplay());
+                this.elements.opacity.addEventListener('input', () => this.updateOpacity());
+
+                // Layout events
+                document.querySelectorAll('.layout-option').forEach(option => {
+                    option.addEventListener('click', (e) => this.changeLayout(e.target.dataset.layout));
+                });
+
+                // Color events
+                document.querySelectorAll('.color-picker-container').forEach((container, index) => {
+                    container.querySelectorAll('.color-option').forEach(option => {
+                        option.addEventListener('click', (e) => {
+                            if (e.target.dataset.color === 'custom') {
+                                if (index === 0) {
+                                    this.elements.customBgColor.click();
+                                } else {
+                                    this.elements.customTextColor.click();
+                                }
+                            } else {
+                                this.changeColor(e.target.dataset.color, index === 0 ? 'bg' : 'text', container);
+                            }
+                        });
+                    });
+                });
+
+                this.elements.customBgColor.addEventListener('change', (e) => {
+                    this.changeColor(e.target.value, 'bg', document.querySelectorAll('.color-picker-container')[0]);
+                });
+
+                this.elements.customTextColor.addEventListener('change', (e) => {
+                    this.changeColor(e.target.value, 'text', document.querySelectorAll('.color-picker-container')[1]);
+                });
+
+                // Export events
+                this.elements.exportPNG.addEventListener('click', () => this.exportAsPNG());
+                this.elements.exportPDF.addEventListener('click', () => this.exportAsPDF());
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey || e.metaKey) {
+                        switch(e.key) {
+                            case 's':
+                                e.preventDefault();
+                                this.exportAsPNG();
+                                break;
+                            case 'e':
+                                e.preventDefault();
+                                this.exportAsPDF();
+                                break;
+                        }
+                    }
+                });
+            }
+
+            updateDisplay() {
+                const mainText = this.elements.mainText.value || 'Your Text Here';
+                const subText = this.elements.subText.value;
+                
+                this.elements.mainTextDisplay.textContent = mainText;
+                this.elements.subTextDisplay.textContent = subText;
+                
+                // Apply typography
+                const fontFamily = this.elements.fontFamily.value;
+                const fontWeight = this.elements.fontWeight.value;
+                const effect = this.elements.textEffect.value;
+                
+                this.elements.mainTextDisplay.style.fontFamily = fontFamily;
+                this.elements.mainTextDisplay.style.fontWeight = fontWeight;
+                this.elements.subTextDisplay.style.fontFamily = fontFamily;
+                
+                // Apply effects
+                this.elements.mainTextDisplay.className = `main-text ${effect ? 'effect-' + effect : ''}`;
+                
+                // Show/hide subtitle
+                this.elements.subTextDisplay.style.display = subText ? 'block' : 'none';
+            }
+
+            updateFontSize() {
+                const size = this.elements.fontSize.value;
+                this.elements.fontSizeValue.textContent = size + 'px';
+                this.elements.mainTextDisplay.style.fontSize = size + 'px';
+            }
+
+            updateLetterSpacing() {
+                const spacing = this.elements.letterSpacing.value;
+                this.elements.letterSpacingValue.textContent = spacing + 'px';
+                this.elements.mainTextDisplay.style.letterSpacing = spacing + 'px';
+            }
+
+            updateOpacity() {
+                const opacity = this.elements.opacity.value;
+                this.elements.opacityValue.textContent = opacity + '%';
+                this.elements.posterContent.style.opacity = opacity / 100;
+            }
+
+            changeLayout(layout) {
+                // Update active state
+                document.querySelectorAll('.layout-option').forEach(option => {
+                    option.classList.remove('active');
+                });
+                document.querySelector(`[data-layout="${layout}"]`).classList.add('active');
+                
+                // Apply layout
+                this.elements.posterContent.className = `poster-content layout-${layout}`;
+                this.currentLayout = layout;
+            }
+
+            changeColor(color, type, container) {
+                // Update active state
+                container.querySelectorAll('.color-option').forEach(option => {
+                    option.classList.remove('active');
+                });
+                
+                if (color !== 'custom') {
+                    container.querySelector(`[data-color="${color}"]`).classList.add('active');
+                } else {
+                    container.querySelector('[data-color="custom"]').classList.add('active');
+                }
+                
+                // Apply color
+                if (type === 'bg') {
+                    this.elements.posterCanvas.style.background = color;
+                    this.currentBgColor = color;
+                } else {
+                    this.elements.mainTextDisplay.style.color = color;
+                    this.elements.subTextDisplay.style.color = color;
+                    this.currentTextColor = color;
+                }
+            }
+
+            async exportAsPNG() {
+                this.elements.pngText.innerHTML = '<div class="loading"></div>';
+                
+                try {
+                    const canvas = await html2canvas(this.elements.posterCanvas, {
+                        backgroundColor: this.currentBgColor,
+                        scale: 2,
+                        useCORS: true,
+                        allowTaint: true,
+                        width: 600,
+                        height: 800
+                    });
+                    
+                    const link = document.createElement('a');
+                    link.download = `typographic-poster-${Date.now()}.png`;
+                    link.href = canvas.toDataURL('image/png', 1.0);
+                    link.click();
+                } catch (error) {
+                    console.error('Export failed:', error);
+                    alert('Export failed. Please try again.');
+                } finally {
+                    this.elements.pngText.textContent = 'Export PNG';
+                }
+            }
+
+            async exportAsPDF() {
+                this.elements.pdfText.innerHTML = '<div class="loading"></div>';
+                
+                try {
+                    const canvas = await html2canvas(this.elements.posterCanvas, {
+                        backgroundColor: this.currentBgColor,
+                        scale: 2,
+                        useCORS: true,
+                        allowTaint: true,
+                        width: 600,
+                        height: 800
+                    });
+                    
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF({
+                        orientation: 'portrait',
+                        unit: 'mm',
+                        format: 'a4'
+                    });
+                    
+                    const imgData = canvas.toDataURL('image/png', 1.0);
+                    const imgWidth = 210;
+                    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                    
+                    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                    pdf.save(`typographic-poster-${Date.now()}.pdf`);
+                } catch (error) {
+                    console.error('PDF export failed:', error);
+                    alert('PDF export failed. Please try again.');
+                } finally {
+                    this.elements.pdfText.textContent = 'Export PDF';
+                }
+            }
+
+            // Advanced features for professional use
+            applyAdvancedTypography() {
+                const mainText = this.elements.mainTextDisplay;
+                const words = mainText.textContent.split(' ');
+                
+                // Smart line breaks for better typography
+                if (words.length > 1) {
+                    const midpoint = Math.ceil(words.length / 2);
+                    const firstLine = words.slice(0, midpoint).join(' ');
+                    const secondLine = words.slice(midpoint).join(' ');
+                    mainText.innerHTML = `${firstLine}<br>${secondLine}`;
+                }
+            }
+
+            // Real-time preview updates
+            setupRealtimePreview() {
+                const observer = new MutationObserver(() => {
+                    this.updateDisplay();
+                });
+                
+                observer.observe(this.elements.mainText, {
+                    childList: true,
+                    subtree: true,
+                    characterData: true
+                });
+            }
+
+            // Auto-save functionality
+            setupAutoSave() {
+                const settings = {
+                    mainText: this.elements.mainText.value,
+                    subText: this.elements.subText.value,
+                    layout: this.currentLayout,
+                    fontFamily: this.elements.fontFamily.value,
+                    fontSize: this.elements.fontSize.value,
+                    fontWeight: this.elements.fontWeight.value,
+                    bgColor: this.currentBgColor,
+                    textColor: this.currentTextColor
+                };
+                
+                // In a real application, this would save to a backend
+                console.log('Auto-saved settings:', settings);
+            }
+
+            // Accessibility improvements
+            setupAccessibility() {
+                // Add ARIA labels
+                this.elements.posterCanvas.setAttribute('aria-label', 'Typography poster preview');
+                
+                // Keyboard navigation for layout options
+                document.querySelectorAll('.layout-option').forEach((option, index) => {
+                    option.setAttribute('tabindex', '0');
+                    option.setAttribute('role', 'button');
+                    option.setAttribute('aria-label', `Layout option: ${option.dataset.name}`);
+                    
+                    option.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            this.changeLayout(option.dataset.layout);
+                        }
+                    });
+                });
+                
+                // High contrast mode detection
+                if (window.matchMedia('(prefers-contrast: high)').matches) {
+                    document.body.classList.add('high-contrast');
+                }
+            }
+
+            // Performance optimizations
+            debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+
+            // Initialize advanced features
+            initAdvancedFeatures() {
+                this.setupRealtimePreview();
+                this.setupAccessibility();
+                
+                // Debounced updates for better performance
+                const debouncedUpdate = this.debounce(() => this.updateDisplay(), 100);
+                this.elements.mainText.addEventListener('input', debouncedUpdate);
+                this.elements.subText.addEventListener('input', debouncedUpdate);
+                
+                // Auto-save every 30 seconds
+                setInterval(() => this.setupAutoSave(), 30000);
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            const app = new TypographicPosterGenerator();
+            app.initAdvancedFeatures();
+            
+            // Add some visual flair
+            setTimeout(() => {
+                document.querySelector('.canvas-container').style.transform = 'translateY(0)';
+            }, 100);
+            
+            // Welcome animation
+            const welcomeText = document.querySelector('.main-text');
+            welcomeText.style.animation = 'fadeInUp 1s ease-out';
+            
+            // Add CSS animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeInUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(30px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                
+                .high-contrast {
+                    filter: contrast(150%);
+                }
+                
+                .layout-option:focus {
+                    outline: 3px solid #667eea;
+                    outline-offset: 2px;
+                }
+                
+                /* Advanced gradient backgrounds */
+                .bg-gradient-sunset {
+                    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+                }
+                
+                .bg-gradient-ocean {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                }
+                
+                .bg-gradient-forest {
+                    background: linear-gradient(135deg, #134e5e 0%, #71b280 100%);
+                }
+                
+                .bg-gradient-fire {
+                    background: linear-gradient(135deg, #ff6b6b 0%, #ffa726 100%);
+                }
+                
+                /* Professional print styles */
+                @media print {
+                    body {
+                        background: white !important;
+                    }
+                    
+                    .sidebar {
+                        display: none;
+                    }
+                    
+                    .canvas-area {
+                        padding: 0;
+                    }
+                    
+                    .poster-canvas {
+                        box-shadow: none;
+                        border: 1px solid #000;
+                    }
+                }
+                
+                /* Loading states */
+                .export-btn:disabled {
+                    opacity: 0.6;
+                    cursor: not-allowed;
+                }
+                
+                /* Smooth transitions for all interactive elements */
+                * {
+                    transition: all 0.2s ease;
+                }
+                
+                /* Enhanced focus states for accessibility */
+                .control-input:focus,
+                .control-select:focus,
+                .control-textarea:focus {
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+                }
+                
+                /* Professional tooltips */
+                .control-label {
+                    position: relative;
+                    cursor: help;
+                }
+                
+                .control-label:hover::after {
+                    content: attr(title);
+                    position: absolute;
+                    bottom: 100%;
+                    left: 0;
+                    background: rgba(0, 0, 0, 0.8);
+                    color: white;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    font-size: 12px;
+                    white-space: nowrap;
+                    z-index: 1000;
+                }
+                
+                /* Enhanced mobile responsiveness */
+                @media (max-width: 480px) {
+                    .sidebar-header {
+                        padding: 16px;
+                    }
+                    
+                    .control-section {
+                        padding: 16px;
+                    }
+                    
+                    .layout-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                    
+                    .color-picker-container {
+                        grid-template-columns: repeat(4, 1fr);
+                    }
+                    
+                    .main-text {
+                        font-size: 28px;
+                    }
+                    
+                    .sub-text {
+                        font-size: 16px;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Add professional features notification
+            setTimeout(() => {
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: linear-gradient(135deg, #667eea, #764ba2);
+                    color: white;
+                    padding: 16px 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+                    z-index: 10000;
+                    max-width: 300px;
+                    opacity: 0;
+                    transform: translateX(100%);
+                    transition: all 0.5s ease;
+                `;
+                notification.innerHTML = `
+                    <div style="font-weight: 600; margin-bottom: 4px;">🎨 Professional Features Active</div>
+                    <div style="font-size: 14px; opacity: 0.9;">Premium typography controls, advanced layouts, and print-ready exports are now available.</div>
+                `;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.style.opacity = '1';
+                    notification.style.transform = 'translateX(0)';
+                }, 100);
+                
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                    notification.style.transform = 'translateX(100%)';
+                    setTimeout(() => notification.remove(), 500);
+                }, 5000);
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
