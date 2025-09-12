@@ -1,0 +1,1916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typographic Poster Generator Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&family=Bebas+Neue&family=Oswald:wght@200;300;400;500;600;700&family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --glass-bg: rgba(255, 255, 255, 0.12);
+            --glass-border: rgba(255, 255, 255, 0.18);
+            --shadow-soft: 0 8px 32px rgba(31, 38, 135, 0.37);
+            --shadow-hover: 0 12px 40px rgba(31, 38, 135, 0.5);
+            --text-primary: #2d3748;
+            --text-secondary: #4a5568;
+            --border-radius: clamp(8px, 2vw, 16px);
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 0.75rem;
+            --spacing-md: 1rem;
+            --spacing-lg: 1.5rem;
+            --spacing-xl: 2rem;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            color: var(--text-primary);
+            overflow-x: hidden;
+            font-feature-settings: 'kern' 1, 'liga' 1;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 40% 60%, rgba(102, 126, 234, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .sidebar {
+            width: clamp(320px, 25vw, 380px);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-left: none;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(102, 126, 234, 0.6) transparent;
+            position: relative;
+            z-index: 2;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, transparent 100%);
+            pointer-events: none;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #667eea, #764ba2);
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #5a6fd8, #6a42a0);
+        }
+
+        .header {
+            padding: var(--spacing-xl);
+            background: var(--primary-gradient);
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            animation: headerGlow 8s ease-in-out infinite alternate;
+        }
+
+        .header h1 {
+            font-size: clamp(20px, 4vw, 28px);
+            font-weight: 800;
+            margin-bottom: var(--spacing-xs);
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            font-size: clamp(12px, 2.5vw, 14px);
+            opacity: 0.85;
+            position: relative;
+            z-index: 1;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .controls {
+            padding: var(--spacing-xl);
+        }
+
+        .control-group {
+            margin-bottom: var(--spacing-xl);
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-lg);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .control-group:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .control-group h3 {
+            font-size: clamp(14px, 3vw, 16px);
+            font-weight: 700;
+            margin-bottom: var(--spacing-md);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            position: relative;
+        }
+
+        .control-group h3::before {
+            content: '';
+            width: 4px;
+            height: 18px;
+            background: var(--primary-gradient);
+            border-radius: 2px;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: var(--spacing-md);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 
+                0 0 0 4px rgba(102, 126, 234, 0.15),
+                0 4px 20px rgba(102, 126, 234, 0.25);
+            transform: translateY(-1px);
+        }
+
+        input:hover, select:hover, textarea:hover {
+            border-color: rgba(102, 126, 234, 0.4);
+            background: rgba(255, 255, 255, 0.92);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 90px;
+            font-family: inherit;
+            line-height: 1.6;
+        }
+
+        .range-group {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+            padding: var(--spacing-sm);
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .range-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            min-width: 70px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .range-group input[type="range"] {
+            flex: 1;
+            height: 8px;
+            background: linear-gradient(to right, #e2e8f0 0%, #e2e8f0 100%);
+            border-radius: 4px;
+            padding: 0;
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .range-group input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 
+                0 2px 8px rgba(102, 126, 234, 0.4),
+                0 0 0 2px white;
+            transition: all 0.2s ease;
+        }
+
+        .range-group input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 
+                0 4px 12px rgba(102, 126, 234, 0.6),
+                0 0 0 3px white;
+        }
+
+        .range-group input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        .range-group span {
+            font-size: 13px;
+            font-weight: 700;
+            color: #667eea;
+            min-width: 45px;
+            text-align: right;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+            padding: var(--spacing-sm);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .color-option {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .color-option::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: conic-gradient(from 0deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            border-radius: inherit;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .color-option:hover {
+            transform: scale(1.15) rotate(5deg);
+            box-shadow: 
+                0 8px 25px rgba(0, 0, 0, 0.3),
+                0 0 0 3px rgba(255, 255, 255, 0.4);
+        }
+
+        .color-option:hover::before {
+            opacity: 1;
+        }
+
+        .color-option.active {
+            border-color: white;
+            transform: scale(1.1);
+            box-shadow: 
+                0 6px 20px rgba(0, 0, 0, 0.4),
+                0 0 0 3px rgba(255, 255, 255, 0.6);
+        }
+
+        .layout-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .layout-option {
+            aspect-ratio: 3/4;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+        }
+
+        .layout-option::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .layout-option:hover {
+            border-color: #667eea;
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 
+                0 12px 30px rgba(102, 126, 234, 0.25),
+                0 0 0 1px rgba(102, 126, 234, 0.1);
+        }
+
+        .layout-option:hover::before {
+            opacity: 1;
+        }
+
+        .layout-option.active {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            box-shadow: 
+                0 8px 25px rgba(102, 126, 234, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .layout-option.active::before {
+            opacity: 1;
+        }
+
+        .layout-preview {
+            padding: var(--spacing-sm);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+
+        .export-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .poster-canvas {
+            width: 400px;
+            height: 600px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s ease;
+        }
+
+        .poster-canvas:hover {
+            transform: scale(1.02);
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+        }
+
+        .text-element {
+            position: absolute;
+            cursor: move;
+            user-select: none;
+            transition: all 0.3s ease;
+            line-height: 1.2;
+            word-break: break-word;
+        }
+
+        .text-element:hover {
+            outline: 2px dashed #667eea;
+            outline-offset: 4px;
+        }
+
+        .text-element.selected {
+            outline: 2px solid #667eea;
+            outline-offset: 4px;
+        }
+
+        .effect-controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .effect-btn {
+            padding: 8px 12px;
+            border: 2px solid #e1e5e9;
+            background: white;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .effect-btn:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .effect-btn.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .preset-phrases {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .phrase-tag {
+            padding: 6px 12px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #667eea;
+        }
+
+        .phrase-tag:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .floating-toolbar {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            display: flex;
+            gap: 10px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .floating-toolbar.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .toolbar-btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 50vh;
+            }
+            
+            .canvas-container {
+                padding: 20px;
+            }
+            
+            .poster-canvas {
+                width: 300px;
+                height: 450px;
+            }
+        }
+        .export-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-lg);
+        }
+
+        .btn {
+            padding: var(--spacing-md) var(--spacing-lg);
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .btn:hover::before {
+            transform: translateX(100%);
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+            border: 2px solid transparent;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 
+                0 8px 30px rgba(102, 126, 234, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-primary:active {
+            transform: translateY(-1px) scale(0.98);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.9);
+            color: #667eea;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: #667eea;
+            color: #5a6fd8;
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-xl);
+            background: var(--primary-gradient);
+            position: relative;
+            z-index: 1;
+        }
+
+        .canvas-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .poster-canvas {
+            width: clamp(350px, 25vw, 450px);
+            height: clamp(525px, 37.5vw, 675px);
+            background: white;
+            border-radius: clamp(12px, 2vw, 20px);
+            box-shadow: 
+                0 25px 80px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2;
+        }
+
+        .poster-canvas::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .poster-canvas:hover {
+            transform: scale(1.03) rotateY(5deg) rotateX(2deg);
+            box-shadow: 
+                0 35px 100px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .text-element {
+            position: absolute;
+            cursor: move;
+            user-select: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            line-height: 1.2;
+            word-break: break-word;
+            border-radius: 4px;
+        }
+
+        .text-element:hover {
+            outline: 2px dashed rgba(102, 126, 234, 0.6);
+            outline-offset: 6px;
+            background: rgba(102, 126, 234, 0.05);
+            transform: scale(1.01);
+        }
+
+        .text-element.selected {
+            outline: 3px solid #667eea;
+            outline-offset: 6px;
+            background: rgba(102, 126, 234, 0.08);
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .effect-controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+            padding: var(--spacing-sm);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .effect-btn {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .effect-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--primary-gradient);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .effect-btn:hover {
+            border-color: rgba(102, 126, 234, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .effect-btn.active {
+            border-color: #667eea;
+            background: var(--primary-gradient);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 
+                0 4px 15px rgba(102, 126, 234, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .preset-phrases {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+            padding: var(--spacing-sm);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--border-radius);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .phrase-tag {
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--text-secondary);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .phrase-tag::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--primary-gradient);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .phrase-tag:hover {
+            background: var(--primary-gradient);
+            color: white;
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+            border-color: transparent;
+        }
+
+        .phrase-tag:hover::before {
+            opacity: 1;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+            position: relative;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+
+        .floating-toolbar {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-radius: 16px;
+            padding: var(--spacing-md);
+            box-shadow: 
+                var(--shadow-soft),
+                0 0 0 1px var(--glass-border);
+            display: flex;
+            gap: var(--spacing-sm);
+            opacity: 0;
+            transform: translateY(20px) scale(0.9);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+        }
+
+        .floating-toolbar.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .floating-toolbar::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+            border-radius: inherit;
+            pointer-events: none;
+        }
+
+        .toolbar-btn {
+            width: 48px;
+            height: 48px;
+            border: none;
+            border-radius: 12px;
+            background: var(--primary-gradient);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .toolbar-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.2) 50%, transparent 70%);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .toolbar-btn:hover {
+            background: var(--secondary-gradient);
+            transform: translateY(-3px) scale(1.1);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .toolbar-btn:hover::before {
+            transform: translateX(100%);
+        }
+
+        .toolbar-btn:active {
+            transform: translateY(-1px) scale(1.05);
+        }
+
+        /* Enhanced Animations */
+        @keyframes headerGlow {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.1; }
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        @keyframes glitch {
+            0%, 100% { transform: translate(-50%, -50%) skew(0deg); }
+            10% { transform: translate(-50%, -50%) skew(-2deg) scale(1.01); }
+            20% { transform: translate(-50%, -50%) skew(2deg) scale(0.99); }
+            30% { transform: translate(-50%, -50%) skew(-1deg) scale(1.02); }
+            40% { transform: translate(-50%, -50%) skew(1deg) scale(0.98); }
+            50% { transform: translate(-50%, -50%) skew(0deg) scale(1); }
+        }
+
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: scale(0.9) translateY(20px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: scale(1) translateY(0); 
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 5px rgba(102, 126, 234, 0.4); }
+            50% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.8); }
+        }
+
+        /* Enhanced Responsive Design */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: clamp(300px, 30vw, 350px);
+            }
+            
+            .poster-canvas {
+                width: clamp(300px, 35vw, 400px);
+                height: clamp(450px, 52.5vw, 600px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --spacing-xs: 0.25rem;
+                --spacing-sm: 0.5rem;
+                --spacing-md: 0.75rem;
+                --spacing-lg: 1rem;
+                --spacing-xl: 1.25rem;
+            }
+
+            .container {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 60vh;
+                border-right: none;
+                border-bottom: 1px solid var(--glass-border);
+            }
+            
+            .canvas-container {
+                padding: var(--spacing-lg);
+                min-height: 40vh;
+            }
+            
+            .poster-canvas {
+                width: clamp(280px, 80vw, 350px);
+                height: clamp(420px, 120vw, 525px);
+            }
+
+            .floating-toolbar {
+                bottom: 20px;
+                right: 20px;
+                padding: var(--spacing-sm);
+                gap: var(--spacing-xs);
+            }
+
+            .toolbar-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+
+            .color-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .color-option {
+                width: 36px;
+                height: 36px;
+            }
+
+            .export-buttons {
+                grid-template-columns: 1fr;
+                gap: var(--spacing-sm);
+            }
+
+            .effect-controls {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 18px;
+            }
+
+            .header p {
+                font-size: 12px;
+            }
+
+            .controls {
+                padding: var(--spacing-md);
+            }
+
+            .control-group {
+                padding: var(--spacing-md);
+                margin-bottom: var(--spacing-lg);
+            }
+
+            .poster-canvas {
+                width: clamp(250px, 90vw, 300px);
+                height: clamp(375px, 135vw, 450px);
+            }
+        }
+
+        /* Enhanced Focus States for Accessibility */
+        .btn:focus-visible,
+        .toolbar-btn:focus-visible,
+        .effect-btn:focus-visible,
+        .phrase-tag:focus-visible,
+        .color-option:focus-visible,
+        .layout-option:focus-visible {
+            outline: 3px solid rgba(102, 126, 234, 0.8);
+            outline-offset: 2px;
+        }
+
+        /* High Contrast Mode Support */
+        @media (prefers-contrast: high) {
+            :root {
+                --text-primary: #000;
+                --text-secondary: #333;
+            }
+
+            .sidebar {
+                background: rgba(255, 255, 255, 0.98);
+                border: 2px solid #000;
+            }
+
+            .control-group {
+                border: 1px solid #333;
+            }
+
+            input, select, textarea {
+                border: 2px solid #333;
+            }
+        }
+
+        /* Reduced Motion Support */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+
+            .poster-canvas:hover {
+                transform: none;
+            }
+
+            .text-element:hover {
+                transform: none;
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            .sidebar,
+            .floating-toolbar {
+                display: none;
+            }
+
+            .canvas-container {
+                padding: 0;
+                background: white;
+            }
+
+            .poster-canvas {
+                box-shadow: none;
+                border: 1px solid #ccc;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="header">
+                <h1>Typographic Poster Pro</h1>
+                <p>Professional Design Studio</p>
+            </div>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <h3>📝 Text Content</h3>
+                    <textarea id="mainText" placeholder="Enter your main text here...">CREATIVE
+TYPOGRAPHY
+DESIGN</textarea>
+                    
+                    <div class="preset-phrases">
+                        <div class="phrase-tag" onclick="setPresetPhrase('BOLD\nSTATEMENT')">BOLD STATEMENT</div>
+                        <div class="phrase-tag" onclick="setPresetPhrase('MINIMAL\nDESIGN')">MINIMAL DESIGN</div>
+                        <div class="phrase-tag" onclick="setPresetPhrase('MODERN\nART')">MODERN ART</div>
+                        <div class="phrase-tag" onclick="setPresetPhrase('CREATIVE\nSTUDIO')">CREATIVE STUDIO</div>
+                        <div class="phrase-tag" onclick="setPresetPhrase('TYPOGRAPHY\nMATTERS')">TYPOGRAPHY MATTERS</div>
+                        <div class="phrase-tag" onclick="setPresetPhrase('DESIGN\nTHINKING')">DESIGN THINKING</div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>🎨 Layout Templates</h3>
+                    <div class="layout-grid">
+                        <div class="layout-option active" data-layout="centered" onclick="setLayout('centered')">
+                            <div class="layout-preview">
+                                <div style="font-weight: bold; margin-bottom: 4px;">CENTERED</div>
+                                <div style="font-size: 8px;">Classic</div>
+                            </div>
+                        </div>
+                        <div class="layout-option" data-layout="stacked" onclick="setLayout('stacked')">
+                            <div class="layout-preview">
+                                <div style="font-weight: bold; margin-bottom: 4px;">STACKED</div>
+                                <div style="font-size: 8px;">Vertical</div>
+                            </div>
+                        </div>
+                        <div class="layout-option" data-layout="diagonal" onclick="setLayout('diagonal')">
+                            <div class="layout-preview">
+                                <div style="font-weight: bold; margin-bottom: 4px;">DIAGONAL</div>
+                                <div style="font-size: 8px;">Dynamic</div>
+                            </div>
+                        </div>
+                        <div class="layout-option" data-layout="scattered" onclick="setLayout('scattered')">
+                            <div class="layout-preview">
+                                <div style="font-weight: bold; margin-bottom: 4px;">SCATTERED</div>
+                                <div style="font-size: 8px;">Artistic</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>✒️ Typography</h3>
+                    <select id="fontFamily" onchange="updatePoster()">
+                        <option value="Inter, sans-serif">Inter (Modern Sans)</option>
+                        <option value="Playfair Display, serif">Playfair Display (Elegant Serif)</option>
+                        <option value="Space Grotesk, sans-serif">Space Grotesk (Geometric)</option>
+                        <option value="Bebas Neue, cursive">Bebas Neue (Bold Condensed)</option>
+                        <option value="Oswald, sans-serif">Oswald (Industrial)</option>
+                        <option value="Fira Code, monospace">Fira Code (Technical)</option>
+                    </select>
+                    
+                    <div class="range-group">
+                        <label>Size</label>
+                        <input type="range" id="fontSize" min="20" max="120" value="48" onchange="updatePoster()">
+                        <span id="fontSizeValue">48px</span>
+                    </div>
+                    
+                    <div class="range-group">
+                        <label>Weight</label>
+                        <input type="range" id="fontWeight" min="300" max="900" step="100" value="700" onchange="updatePoster()">
+                        <span id="fontWeightValue">700</span>
+                    </div>
+                    
+                    <div class="range-group">
+                        <label>Spacing</label>
+                        <input type="range" id="letterSpacing" min="-5" max="20" value="2" onchange="updatePoster()">
+                        <span id="letterSpacingValue">2px</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>🎭 Text Effects</h3>
+                    <div class="effect-controls">
+                        <div class="effect-btn" data-effect="shadow" onclick="toggleEffect('shadow')">Drop Shadow</div>
+                        <div class="effect-btn" data-effect="gradient" onclick="toggleEffect('gradient')">Gradient</div>
+                        <div class="effect-btn" data-effect="outline" onclick="toggleEffect('outline')">Outline</div>
+                        <div class="effect-btn" data-effect="glitch" onclick="toggleEffect('glitch')">Glitch</div>
+                        <div class="effect-btn" data-effect="neon" onclick="toggleEffect('neon')">Neon Glow</div>
+                        <div class="effect-btn" data-effect="emboss" onclick="toggleEffect('emboss')">Emboss</div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>🌈 Colors</h3>
+                    <div class="color-grid">
+                        <div class="color-option active" style="background: #333" data-color="#333" onclick="setTextColor('#333')"></div>
+                        <div class="color-option" style="background: #667eea" data-color="#667eea" onclick="setTextColor('#667eea')"></div>
+                        <div class="color-option" style="background: #764ba2" data-color="#764ba2" onclick="setTextColor('#764ba2')"></div>
+                        <div class="color-option" style="background: #f093fb" data-color="#f093fb" onclick="setTextColor('#f093fb')"></div>
+                        <div class="color-option" style="background: #f5576c" data-color="#f5576c" onclick="setTextColor('#f5576c')"></div>
+                        <div class="color-option" style="background: #4facfe" data-color="#4facfe" onclick="setTextColor('#4facfe')"></div>
+                        <div class="color-option" style="background: #43e97b" data-color="#43e97b" onclick="setTextColor('#43e97b')"></div>
+                        <div class="color-option" style="background: #fa709a" data-color="#fa709a" onclick="setTextColor('#fa709a')"></div>
+                        <div class="color-option" style="background: #fee140" data-color="#fee140" onclick="setTextColor('#fee140')"></div>
+                        <div class="color-option" style="background: #ff6b6b" data-color="#ff6b6b" onclick="setTextColor('#ff6b6b')"></div>
+                        <div class="color-option" style="background: #4ecdc4" data-color="#4ecdc4" onclick="setTextColor('#4ecdc4')"></div>
+                        <div class="color-option" style="background: #45b7d1" data-color="#45b7d1" onclick="setTextColor('#45b7d1')"></div>
+                    </div>
+                    
+                    <input type="color" id="customColor" onchange="setTextColor(this.value)" style="margin-top: 10px;">
+                </div>
+
+                <div class="control-group">
+                    <h3>🎨 Background</h3>
+                    <div class="color-grid">
+                        <div class="color-option active" style="background: white" data-bg="white" onclick="setBackground('white')"></div>
+                        <div class="color-option" style="background: #f8f9fa" data-bg="#f8f9fa" onclick="setBackground('#f8f9fa')"></div>
+                        <div class="color-option" style="background: #333" data-bg="#333" onclick="setBackground('#333')"></div>
+                        <div class="color-option" style="background: linear-gradient(135deg, #667eea, #764ba2)" data-bg="gradient1" onclick="setBackground('linear-gradient(135deg, #667eea, #764ba2)')"></div>
+                        <div class="color-option" style="background: linear-gradient(135deg, #f093fb, #f5576c)" data-bg="gradient2" onclick="setBackground('linear-gradient(135deg, #f093fb, #f5576c)')"></div>
+                        <div class="color-option" style="background: linear-gradient(135deg, #4facfe, #00f2fe)" data-bg="gradient3" onclick="setBackground('linear-gradient(135deg, #4facfe, #00f2fe)')"></div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>📤 Export Options</h3>
+                    <div class="export-buttons">
+                        <button class="btn btn-primary" onclick="exportPDF()">📄 Export PDF</button>
+                        <button class="btn btn-secondary" onclick="exportPNG()">🖼️ Export PNG</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <div class="poster-canvas" id="posterCanvas">
+                <!-- Text elements will be dynamically added here -->
+            </div>
+        </div>
+    </div>
+
+    <div class="floating-toolbar" id="floatingToolbar">
+        <button class="toolbar-btn" onclick="duplicatePoster()" title="Duplicate">📋</button>
+        <button class="toolbar-btn" onclick="resetPoster()" title="Reset">🔄</button>
+        <button class="toolbar-btn" onclick="undoLastAction()" title="Undo">↶</button>
+        <button class="toolbar-btn" onclick="randomizePoster()" title="Randomize">🎲</button>
+    </div>
+
+    <script>
+        let currentLayout = 'centered';
+        let currentTextColor = '#333';
+        let currentBackground = 'white';
+        let activeEffects = new Set();
+        let posterHistory = [];
+        let currentHistoryIndex = -1;
+
+        // Initialize the poster
+        function initPoster() {
+            updatePoster();
+            showFloatingToolbar();
+            saveToHistory();
+        }
+
+        function updatePoster() {
+            const canvas = document.getElementById('posterCanvas');
+            const text = document.getElementById('mainText').value;
+            const fontFamily = document.getElementById('fontFamily').value;
+            const fontSize = document.getElementById('fontSize').value;
+            const fontWeight = document.getElementById('fontWeight').value;
+            const letterSpacing = document.getElementById('letterSpacing').value;
+
+            // Update range value displays
+            document.getElementById('fontSizeValue').textContent = fontSize + 'px';
+            document.getElementById('fontWeightValue').textContent = fontWeight;
+            document.getElementById('letterSpacingValue').textContent = letterSpacing + 'px';
+
+            // Clear canvas
+            canvas.innerHTML = '';
+
+            // Set background
+            canvas.style.background = currentBackground;
+
+            // Split text into lines
+            const lines = text.split('\n').filter(line => line.trim());
+
+            // Apply layout
+            applyLayout(canvas, lines, {
+                fontFamily,
+                fontSize: parseInt(fontSize),
+                fontWeight,
+                letterSpacing: parseInt(letterSpacing)
+            });
+        }
+
+        function applyLayout(canvas, lines, styles) {
+            const layouts = {
+                centered: () => applyCenteredLayout(canvas, lines, styles),
+                stacked: () => applyStackedLayout(canvas, lines, styles),
+                diagonal: () => applyDiagonalLayout(canvas, lines, styles),
+                scattered: () => applyScatteredLayout(canvas, lines, styles)
+            };
+
+            layouts[currentLayout]();
+        }
+
+        function applyCenteredLayout(canvas, lines, styles) {
+            const centerX = canvas.offsetWidth / 2;
+            const centerY = canvas.offsetHeight / 2;
+            const lineHeight = styles.fontSize * 1.2;
+            const totalHeight = lines.length * lineHeight;
+            const startY = centerY - totalHeight / 2;
+
+            lines.forEach((line, index) => {
+                createTextElement(line, centerX, startY + index * lineHeight, styles, 'center');
+            });
+        }
+
+        function applyStackedLayout(canvas, lines, styles) {
+            const centerX = canvas.offsetWidth / 2;
+            let currentY = 80;
+            const spacing = styles.fontSize * 1.4;
+
+            lines.forEach((line, index) => {
+                const size = styles.fontSize - index * 8;
+                const weight = styles.fontWeight + index * 100;
+                createTextElement(line, centerX, currentY, {
+                    ...styles,
+                    fontSize: Math.max(size, 24),
+                    fontWeight: Math.min(weight, 900)
+                }, 'center');
+                currentY += spacing;
+            });
+        }
+
+        function applyDiagonalLayout(canvas, lines, styles) {
+            const startX = 80;
+            const startY = 120;
+            const deltaX = (canvas.offsetWidth - 160) / Math.max(lines.length - 1, 1);
+            const deltaY = (canvas.offsetHeight - 240) / Math.max(lines.length - 1, 1);
+
+            lines.forEach((line, index) => {
+                const x = startX + index * deltaX;
+                const y = startY + index * deltaY;
+                const rotation = -15 + index * 5;
+                createTextElement(line, x, y, styles, 'left', rotation);
+            });
+        }
+
+        function applyScatteredLayout(canvas, lines, styles) {
+            const positions = [
+                { x: 100, y: 100, rotation: -5 },
+                { x: 300, y: 180, rotation: 10 },
+                { x: 150, y: 300, rotation: -8 },
+                { x: 280, y: 400, rotation: 3 },
+                { x: 120, y: 480, rotation: -12 }
+            ];
+
+            lines.forEach((line, index) => {
+                const pos = positions[index % positions.length];
+                createTextElement(line, pos.x, pos.y, styles, 'left', pos.rotation);
+            });
+        }
+
+        function createTextElement(text, x, y, styles, align = 'center', rotation = 0) {
+            const element = document.createElement('div');
+            element.className = 'text-element';
+            element.textContent = text;
+            element.style.position = 'absolute';
+            element.style.fontFamily = styles.fontFamily;
+            element.style.fontSize = styles.fontSize + 'px';
+            element.style.fontWeight = styles.fontWeight;
+            element.style.letterSpacing = styles.letterSpacing + 'px';
+            element.style.color = currentTextColor;
+            element.style.textAlign = align;
+            element.style.transform = `translate(-50%, -50%) rotate(${rotation}deg)`;
+            element.style.left = x + 'px';
+            element.style.top = y + 'px';
+            element.style.whiteSpace = 'nowrap';
+
+            // Apply effects
+            applyTextEffects(element);
+
+            // Make draggable
+            makeDraggable(element);
+
+            document.getElementById('posterCanvas').appendChild(element);
+        }
+
+        function applyTextEffects(element) {
+            let filters = '';
+            let textShadow = '';
+            let background = '';
+
+            if (activeEffects.has('shadow')) {
+                textShadow += '4px 4px 8px rgba(0,0,0,0.3)';
+            }
+
+            if (activeEffects.has('gradient')) {
+                element.style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
+                element.style.webkitBackgroundClip = 'text';
+                element.style.webkitTextFillColor = 'transparent';
+                element.style.backgroundClip = 'text';
+            }
+
+            if (activeEffects.has('outline')) {
+                element.style.webkitTextStroke = '2px ' + currentTextColor;
+                element.style.webkitTextFillColor = 'transparent';
+            }
+
+            if (activeEffects.has('glitch')) {
+                element.style.animation = 'glitch 2s infinite';
+            }
+
+            if (activeEffects.has('neon')) {
+                textShadow += (textShadow ? ', ' : '') + `0 0 10px ${currentTextColor}, 0 0 20px ${currentTextColor}, 0 0 30px ${currentTextColor}`;
+            }
+
+            if (activeEffects.has('emboss')) {
+                textShadow += (textShadow ? ', ' : '') + '1px 1px 0px rgba(255,255,255,0.8), -1px -1px 0px rgba(0,0,0,0.3)';
+            }
+
+            element.style.textShadow = textShadow;
+            element.style.filter = filters;
+        }
+
+        function makeDraggable(element) {
+            let isDragging = false;
+            let startX, startY, startLeft, startTop;
+
+            element.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                element.classList.add('selected');
+                startX = e.clientX;
+                startY = e.clientY;
+                startLeft = parseInt(element.style.left);
+                startTop = parseInt(element.style.top);
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                const deltaX = e.clientX - startX;
+                const deltaY = e.clientY - startY;
+                
+                element.style.left = (startLeft + deltaX) + 'px';
+                element.style.top = (startTop + deltaY) + 'px';
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    element.classList.remove('selected');
+                    saveToHistory();
+                }
+            });
+        }
+
+        function setLayout(layout) {
+            // Remove active class from all layouts
+            document.querySelectorAll('.layout-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            
+            // Add active class to selected layout
+            document.querySelector(`[data-layout="${layout}"]`).classList.add('active');
+            
+            currentLayout = layout;
+            updatePoster();
+            saveToHistory();
+        }
+
+        function setTextColor(color) {
+            // Remove active class from all color options
+            document.querySelectorAll('.color-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            
+            // Add active class to selected color
+            const colorOption = document.querySelector(`[data-color="${color}"]`);
+            if (colorOption) {
+                colorOption.classList.add('active');
+            }
+            
+            currentTextColor = color;
+            updatePoster();
+            saveToHistory();
+        }
+
+        function setBackground(background) {
+            // Remove active class from all background options
+            document.querySelectorAll('[data-bg]').forEach(option => {
+                option.classList.remove('active');
+            });
+            
+            // Add active class to selected background
+            const bgOption = document.querySelector(`[data-bg="${background}"]`);
+            if (bgOption) {
+                bgOption.classList.add('active');
+            }
+            
+            currentBackground = background;
+            updatePoster();
+            saveToHistory();
+        }
+
+        function toggleEffect(effect) {
+            const button = document.querySelector(`[data-effect="${effect}"]`);
+            
+            if (activeEffects.has(effect)) {
+                activeEffects.delete(effect);
+                button.classList.remove('active');
+            } else {
+                activeEffects.add(effect);
+                button.classList.add('active');
+            }
+            
+            updatePoster();
+            saveToHistory();
+        }
+
+        function setPresetPhrase(phrase) {
+            document.getElementById('mainText').value = phrase;
+            updatePoster();
+            saveToHistory();
+        }
+
+        function saveToHistory() {
+            const state = {
+                text: document.getElementById('mainText').value,
+                layout: currentLayout,
+                textColor: currentTextColor,
+                background: currentBackground,
+                effects: Array.from(activeEffects),
+                fontFamily: document.getElementById('fontFamily').value,
+                fontSize: document.getElementById('fontSize').value,
+                fontWeight: document.getElementById('fontWeight').value,
+                letterSpacing: document.getElementById('letterSpacing').value
+            };
+            
+            // Remove any states after current index
+            posterHistory = posterHistory.slice(0, currentHistoryIndex + 1);
+            posterHistory.push(state);
+            currentHistoryIndex = posterHistory.length - 1;
+            
+            // Limit history to 20 states
+            if (posterHistory.length > 20) {
+                posterHistory.shift();
+                currentHistoryIndex--;
+            }
+        }
+
+        function undoLastAction() {
+            if (currentHistoryIndex > 0) {
+                currentHistoryIndex--;
+                const state = posterHistory[currentHistoryIndex];
+                restoreState(state);
+            }
+        }
+
+        function restoreState(state) {
+            document.getElementById('mainText').value = state.text;
+            document.getElementById('fontFamily').value = state.fontFamily;
+            document.getElementById('fontSize').value = state.fontSize;
+            document.getElementById('fontWeight').value = state.fontWeight;
+            document.getElementById('letterSpacing').value = state.letterSpacing;
+            
+            currentLayout = state.layout;
+            currentTextColor = state.textColor;
+            currentBackground = state.background;
+            
+            activeEffects.clear();
+            state.effects.forEach(effect => activeEffects.add(effect));
+            
+            // Update UI
+            document.querySelectorAll('.layout-option').forEach(option => {
+                option.classList.toggle('active', option.dataset.layout === currentLayout);
+            });
+            
+            document.querySelectorAll('.color-option').forEach(option => {
+                option.classList.toggle('active', option.dataset.color === currentTextColor);
+            });
+            
+            document.querySelectorAll('.effect-btn').forEach(btn => {
+                btn.classList.toggle('active', activeEffects.has(btn.dataset.effect));
+            });
+            
+            updatePoster();
+        }
+
+        function duplicatePoster() {
+            const canvas = document.getElementById('posterCanvas');
+            const clone = canvas.cloneNode(true);
+            // This would typically save to a gallery or create a new project
+            alert('Poster duplicated to clipboard! (In a real app, this would save to your gallery)');
+        }
+
+        function resetPoster() {
+            if (confirm('Are you sure you want to reset the poster? This cannot be undone.')) {
+                document.getElementById('mainText').value = 'CREATIVE\nTYPOGRAPHY\nDESIGN';
+                document.getElementById('fontFamily').value = 'Inter, sans-serif';
+                document.getElementById('fontSize').value = '48';
+                document.getElementById('fontWeight').value = '700';
+                document.getElementById('letterSpacing').value = '2';
+                
+                currentLayout = 'centered';
+                currentTextColor = '#333';
+                currentBackground = 'white';
+                activeEffects.clear();
+                
+                // Reset UI
+                document.querySelectorAll('.layout-option').forEach(option => {
+                    option.classList.toggle('active', option.dataset.layout === 'centered');
+                });
+                
+                document.querySelectorAll('.color-option').forEach(option => {
+                    option.classList.toggle('active', option.dataset.color === '#333');
+                });
+                
+                document.querySelectorAll('.effect-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                updatePoster();
+                saveToHistory();
+            }
+        }
+
+        function randomizePoster() {
+            const phrases = [
+                'BOLD\nSTATEMENT',
+                'CREATIVE\nVISION',
+                'DESIGN\nMATTERS',
+                'MINIMAL\nIMPACT',
+                'ARTISTIC\nEXPRESSION',
+                'MODERN\nAESTHETIC'
+            ];
+            
+            const fonts = [
+                'Inter, sans-serif',
+                'Playfair Display, serif',
+                'Space Grotesk, sans-serif',
+                'Bebas Neue, cursive',
+                'Oswald, sans-serif'
+            ];
+            
+            const layouts = ['centered', 'stacked', 'diagonal', 'scattered'];
+            const colors = ['#333', '#667eea', '#764ba2', '#f5576c', '#43e97b', '#ff6b6b'];
+            const backgrounds = ['white', '#f8f9fa', 'linear-gradient(135deg, #667eea, #764ba2)', 'linear-gradient(135deg, #f093fb, #f5576c)'];
+            
+            // Randomize settings
+            document.getElementById('mainText').value = phrases[Math.floor(Math.random() * phrases.length)];
+            document.getElementById('fontFamily').value = fonts[Math.floor(Math.random() * fonts.length)];
+            document.getElementById('fontSize').value = Math.floor(Math.random() * 60) + 40;
+            document.getElementById('fontWeight').value = [300, 400, 500, 600, 700, 800, 900][Math.floor(Math.random() * 7)];
+            document.getElementById('letterSpacing').value = Math.floor(Math.random() * 15) - 2;
+            
+            setLayout(layouts[Math.floor(Math.random() * layouts.length)]);
+            setTextColor(colors[Math.floor(Math.random() * colors.length)]);
+            setBackground(backgrounds[Math.floor(Math.random() * backgrounds.length)]);
+            
+            // Randomly add effects
+            activeEffects.clear();
+            const effects = ['shadow', 'gradient', 'outline', 'neon'];
+            if (Math.random() > 0.5) {
+                const randomEffect = effects[Math.floor(Math.random() * effects.length)];
+                activeEffects.add(randomEffect);
+                document.querySelector(`[data-effect="${randomEffect}"]`).classList.add('active');
+            }
+            
+            updatePoster();
+            saveToHistory();
+        }
+
+        function showFloatingToolbar() {
+            setTimeout(() => {
+                document.getElementById('floatingToolbar').classList.add('show');
+            }, 1000);
+        }
+
+        async function exportPDF() {
+            const canvas = document.getElementById('posterCanvas');
+            const button = event.target;
+            
+            button.classList.add('loading');
+            button.textContent = 'Generating PDF...';
+            
+            try {
+                const canvasElement = await html2canvas(canvas, {
+                    backgroundColor: null,
+                    scale: 3,
+                    useCORS: true,
+                    logging: false
+                });
+                
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'px',
+                    format: [canvas.offsetWidth * 3, canvas.offsetHeight * 3]
+                });
+                
+                pdf.addImage(canvasElement.toDataURL('image/png'), 'PNG', 0, 0, canvas.offsetWidth * 3, canvas.offsetHeight * 3);
+                pdf.save('typographic-poster.pdf');
+                
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                alert('Error generating PDF. Please try again.');
+            } finally {
+                button.classList.remove('loading');
+                button.textContent = '📄 Export PDF';
+            }
+        }
+
+        async function exportPNG() {
+            const canvas = document.getElementById('posterCanvas');
+            const button = event.target;
+            
+            button.classList.add('loading');
+            button.textContent = 'Generating PNG...';
+            
+            try {
+                const canvasElement = await html2canvas(canvas, {
+                    backgroundColor: null,
+                    scale: 3,
+                    useCORS: true,
+                    logging: false
+                });
+                
+                const link = document.createElement('a');
+                link.download = 'typographic-poster.png';
+                link.href = canvasElement.toDataURL('image/png');
+                link.click();
+                
+            } catch (error) {
+                console.error('Error generating PNG:', error);
+                alert('Error generating PNG. Please try again.');
+            } finally {
+                button.classList.remove('loading');
+                button.textContent = '🖼️ Export PNG';
+            }
+        }
+
+        // Event listeners
+        document.getElementById('mainText').addEventListener('input', () => {
+            updatePoster();
+            saveToHistory();
+        });
+
+        // Add CSS animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes glitch {
+                0% { transform: translate(-50%, -50%) skew(0deg); }
+                10% { transform: translate(-50%, -50%) skew(-2deg); }
+                20% { transform: translate(-50%, -50%) skew(2deg); }
+                30% { transform: translate(-50%, -50%) skew(-1deg); }
+                40% { transform: translate(-50%, -50%) skew(1deg); }
+                50% { transform: translate(-50%, -50%) skew(0deg); }
+                100% { transform: translate(-50%, -50%) skew(0deg); }
+            }
+            
+            .text-element {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            
+            .poster-canvas {
+                animation: fadeIn 0.6s ease-out;
+            }
+            
+            @keyframes fadeIn {
+                from { opacity: 0; transform: scale(0.95); }
+                to { opacity: 1; transform: scale(1); }
+            }
+            
+            .control-group {
+                animation: slideIn 0.4s ease-out forwards;
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            
+            .control-group:nth-child(1) { animation-delay: 0.1s; }
+            .control-group:nth-child(2) { animation-delay: 0.2s; }
+            .control-group:nth-child(3) { animation-delay: 0.3s; }
+            .control-group:nth-child(4) { animation-delay: 0.4s; }
+            .control-group:nth-child(5) { animation-delay: 0.5s; }
+            .control-group:nth-child(6) { animation-delay: 0.6s; }
+            .control-group:nth-child(7) { animation-delay: 0.7s; }
+            .control-group:nth-child(8) { animation-delay: 0.8s; }
+            
+            @keyframes slideIn {
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Initialize the application
+        window.addEventListener('load', initPoster);
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'z':
+                        e.preventDefault();
+                        undoLastAction();
+                        break;
+                    case 'r':
+                        e.preventDefault();
+                        randomizePoster();
+                        break;
+                    case 's':
+                        e.preventDefault();
+                        exportPNG();
+                        break;
+                }
+            }
+        });
+
+        // Add professional touches
+        const tips = [
+            "💡 Tip: Use Ctrl+Z to undo your last action",
+            "🎨 Tip: Try combining different effects for unique looks",
+            "📐 Tip: Drag text elements to reposition them manually",
+            "🎲 Tip: Use the randomize button for inspiration",
+            "⌨️ Tip: Press Ctrl+S to quickly export as PNG"
+        ];
+
+        let tipIndex = 0;
+        setInterval(() => {
+            console.log(tips[tipIndex % tips.length]);
+            tipIndex++;
+        }, 10000);
+    </script>
+</body>
+</html>
