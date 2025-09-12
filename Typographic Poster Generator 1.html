@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typographic Poster Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&family=Oswald:wght@200;300;400;500;600;700&family=Montserrat:wght@100;200;300;400;500;600;700;800;900&family=Roboto+Slab:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            height: 100vh;
+            gap: 0;
+        }
+
+        .sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            color: #2d3748;
+            margin-bottom: 30px;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+        }
+
+        .control-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .control-input, .control-select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .control-input:focus, .control-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .color-input {
+            width: 100%;
+            height: 50px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .color-input:hover {
+            transform: scale(1.05);
+        }
+
+        .range-input {
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f7fafc;
+            color: #2d3748;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #edf2f7;
+            transform: translateY(-1px);
+        }
+
+        .canvas-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            position: relative;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .poster-canvas {
+            background: white;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .poster-canvas:hover {
+            transform: scale(1.02);
+        }
+
+        .poster-text {
+            font-weight: 700;
+            line-height: 0.9;
+            letter-spacing: -0.02em;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .layout-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .layout-option {
+            aspect-ratio: 3/4;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f7fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #718096;
+        }
+
+        .layout-option:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .layout-option.active {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .effect-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .effect-btn {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .effect-btn:hover, .effect-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .preset-phrases {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .phrase-btn {
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+            text-align: left;
+            transition: all 0.2s ease;
+        }
+
+        .phrase-btn:hover {
+            background: #f7fafc;
+            border-color: #667eea;
+        }
+
+        .export-section {
+            border-top: 2px solid #e2e8f0;
+            padding-top: 20px;
+            margin-top: 20px;
+        }
+
+        .gradient-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1;
+            border-radius: 12px;
+        }
+
+        .animate-text {
+            animation: textPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes textPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .glow-effect {
+            text-shadow: 0 0 20px currentColor, 0 0 40px currentColor, 0 0 60px currentColor;
+        }
+
+        .shadow-effect {
+            text-shadow: 8px 8px 0px rgba(0, 0, 0, 0.2);
+        }
+
+        .outline-effect {
+            -webkit-text-stroke: 2px;
+            -webkit-text-fill-color: transparent;
+        }
+
+        @media (max-width: 1024px) {
+            .app-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr;
+            }
+            
+            .sidebar {
+                height: auto;
+                max-height: 50vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="logo">TYPO STUDIO</div>
+            
+            <div class="control-group">
+                <label class="control-label">Text Content</label>
+                <input type="text" class="control-input" id="textInput" value="DESIGN IS POWER" placeholder="Enter your text...">
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Preset Phrases</label>
+                <div class="preset-phrases">
+                    <button class="phrase-btn" onclick="setPhrase('DESIGN IS POWER')">DESIGN IS POWER</button>
+                    <button class="phrase-btn" onclick="setPhrase('CREATE MORE')">CREATE MORE</button>
+                    <button class="phrase-btn" onclick="setPhrase('THINK DIFFERENT')">THINK DIFFERENT</button>
+                    <button class="phrase-btn" onclick="setPhrase('INNOVATE TODAY')">INNOVATE TODAY</button>
+                    <button class="phrase-btn" onclick="setPhrase('DREAM BIG')">DREAM BIG</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Layout Style</label>
+                <div class="layout-grid">
+                    <div class="layout-option active" onclick="setLayout('center')" data-layout="center">CENTER</div>
+                    <div class="layout-option" onclick="setLayout('left')" data-layout="left">LEFT</div>
+                    <div class="layout-option" onclick="setLayout('right')" data-layout="right">RIGHT</div>
+                    <div class="layout-option" onclick="setLayout('top')" data-layout="top">TOP</div>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Typography</label>
+                <select class="control-select" id="fontSelect">
+                    <option value="Inter">Inter - Modern Sans</option>
+                    <option value="Playfair Display">Playfair Display - Elegant Serif</option>
+                    <option value="Oswald">Oswald - Bold Condensed</option>
+                    <option value="Montserrat">Montserrat - Geometric Sans</option>
+                    <option value="Roboto Slab">Roboto Slab - Technical Serif</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Font Size: <span id="fontSizeValue">120px</span></label>
+                <input type="range" class="range-input" id="fontSizeRange" min="40" max="200" value="120">
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Font Weight: <span id="fontWeightValue">700</span></label>
+                <input type="range" class="range-input" id="fontWeightRange" min="100" max="900" step="100" value="700">
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Text Color</label>
+                <input type="color" class="color-input" id="textColor" value="#2d3748">
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Background</label>
+                <select class="control-select" id="backgroundType">
+                    <option value="solid">Solid Color</option>
+                    <option value="gradient">Gradient</option>
+                    <option value="image">Pattern</option>
+                </select>
+                <input type="color" class="color-input" id="backgroundColor" value="#ffffff" style="margin-top: 10px;">
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Text Effects</label>
+                <div class="effect-buttons">
+                    <button class="effect-btn" onclick="toggleEffect('glow')">Glow</button>
+                    <button class="effect-btn" onclick="toggleEffect('shadow')">Shadow</button>
+                    <button class="effect-btn" onclick="toggleEffect('outline')">Outline</button>
+                    <button class="effect-btn" onclick="toggleEffect('animate')">Animate</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Poster Size</label>
+                <select class="control-select" id="posterSize">
+                    <option value="800x1000">Standard (800x1000)</option>
+                    <option value="1200x1600">Large (1200x1600)</option>
+                    <option value="600x800">Small (600x800)</option>
+                    <option value="1080x1080">Square (1080x1080)</option>
+                </select>
+            </div>
+
+            <div class="export-section">
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="exportPNG()">Export PNG</button>
+                    <button class="btn btn-secondary" onclick="exportPDF()">Export PDF</button>
+                </div>
+                <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="randomizeDesign()">Randomize Design</button>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <div class="poster-canvas" id="posterCanvas">
+                <div class="gradient-overlay" id="gradientOverlay"></div>
+                <div class="poster-text" id="posterText">DESIGN IS POWER</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <script>
+        // Application State
+        let currentEffects = new Set();
+        let currentLayout = 'center';
+        
+        // DOM Elements
+        const textInput = document.getElementById('textInput');
+        const posterText = document.getElementById('posterText');
+        const posterCanvas = document.getElementById('posterCanvas');
+        const fontSelect = document.getElementById('fontSelect');
+        const fontSizeRange = document.getElementById('fontSizeRange');
+        const fontWeightRange = document.getElementById('fontWeightRange');
+        const textColor = document.getElementById('textColor');
+        const backgroundColor = document.getElementById('backgroundColor');
+        const backgroundType = document.getElementById('backgroundType');
+        const posterSize = document.getElementById('posterSize');
+        const fontSizeValue = document.getElementById('fontSizeValue');
+        const fontWeightValue = document.getElementById('fontWeightValue');
+        const gradientOverlay = document.getElementById('gradientOverlay');
+
+        // Event Listeners
+        textInput.addEventListener('input', updateText);
+        fontSelect.addEventListener('change', updateFont);
+        fontSizeRange.addEventListener('input', updateFontSize);
+        fontWeightRange.addEventListener('input', updateFontWeight);
+        textColor.addEventListener('change', updateTextColor);
+        backgroundColor.addEventListener('change', updateBackground);
+        backgroundType.addEventListener('change', updateBackgroundType);
+        posterSize.addEventListener('change', updatePosterSize);
+
+        // Update Functions
+        function updateText() {
+            posterText.textContent = textInput.value || 'ENTER TEXT';
+        }
+
+        function updateFont() {
+            posterText.style.fontFamily = `'${fontSelect.value}', sans-serif`;
+        }
+
+        function updateFontSize() {
+            const size = fontSizeRange.value;
+            posterText.style.fontSize = size + 'px';
+            fontSizeValue.textContent = size + 'px';
+        }
+
+        function updateFontWeight() {
+            const weight = fontWeightRange.value;
+            posterText.style.fontWeight = weight;
+            fontWeightValue.textContent = weight;
+        }
+
+        function updateTextColor() {
+            posterText.style.color = textColor.value;
+            if (currentEffects.has('outline')) {
+                posterText.style.webkitTextStrokeColor = textColor.value;
+            }
+        }
+
+        function updateBackground() {
+            const color = backgroundColor.value;
+            const type = backgroundType.value;
+            
+            if (type === 'solid') {
+                posterCanvas.style.background = color;
+                gradientOverlay.style.opacity = '0';
+            }
+        }
+
+        function updateBackgroundType() {
+            const type = backgroundType.value;
+            const color = backgroundColor.value;
+            
+            switch(type) {
+                case 'solid':
+                    posterCanvas.style.background = color;
+                    gradientOverlay.style.opacity = '0';
+                    break;
+                case 'gradient':
+                    const gradients = [
+                        'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                        'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                        'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                        'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+                    ];
+                    const randomGradient = gradients[Math.floor(Math.random() * gradients.length)];
+                    gradientOverlay.style.background = randomGradient;
+                    gradientOverlay.style.opacity = '1';
+                    break;
+                case 'image':
+                    const patterns = [
+                        'radial-gradient(circle at 20% 50%, transparent 20%, rgba(120, 119, 198, 0.3) 21%, rgba(120, 119, 198, 0.3) 34%, transparent 35%, transparent), linear-gradient(0deg, transparent 24%, rgba(120, 119, 198, 0.3) 25%, rgba(120, 119, 198, 0.3) 26%, transparent 27%, transparent 74%, rgba(120, 119, 198, 0.3) 75%, rgba(120, 119, 198, 0.3) 76%, transparent 77%, transparent)',
+                        'repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,0,0,.1) 2px, rgba(0,0,0,.1) 4px)',
+                        'radial-gradient(circle, rgba(0,0,0,0.1) 1px, transparent 1px)'
+                    ];
+                    const randomPattern = patterns[Math.floor(Math.random() * patterns.length)];
+                    posterCanvas.style.background = color;
+                    gradientOverlay.style.background = randomPattern;
+                    gradientOverlay.style.opacity = '1';
+                    break;
+            }
+        }
+
+        function updatePosterSize() {
+            const [width, height] = posterSize.value.split('x').map(Number);
+            posterCanvas.style.width = Math.min(width * 0.8, 600) + 'px';
+            posterCanvas.style.height = Math.min(height * 0.8, 750) + 'px';
+        }
+
+        // Layout Functions
+        function setLayout(layout) {
+            currentLayout = layout;
+            document.querySelectorAll('.layout-option').forEach(opt => opt.classList.remove('active'));
+            document.querySelector(`[data-layout="${layout}"]`).classList.add('active');
+            
+            switch(layout) {
+                case 'center':
+                    posterText.style.textAlign = 'center';
+                    posterCanvas.style.alignItems = 'center';
+                    posterCanvas.style.justifyContent = 'center';
+                    break;
+                case 'left':
+                    posterText.style.textAlign = 'left';
+                    posterCanvas.style.alignItems = 'center';
+                    posterCanvas.style.justifyContent = 'flex-start';
+                    break;
+                case 'right':
+                    posterText.style.textAlign = 'right';
+                    posterCanvas.style.alignItems = 'center';
+                    posterCanvas.style.justifyContent = 'flex-end';
+                    break;
+                case 'top':
+                    posterText.style.textAlign = 'center';
+                    posterCanvas.style.alignItems = 'flex-start';
+                    posterCanvas.style.justifyContent = 'center';
+                    break;
+            }
+        }
+
+        // Effect Functions
+        function toggleEffect(effect) {
+            const button = event.target;
+            
+            if (currentEffects.has(effect)) {
+                currentEffects.delete(effect);
+                button.classList.remove('active');
+            } else {
+                currentEffects.add(effect);
+                button.classList.add('active');
+            }
+            
+            applyEffects();
+        }
+
+        function applyEffects() {
+            // Reset classes
+            posterText.className = 'poster-text';
+            
+            // Apply active effects
+            currentEffects.forEach(effect => {
+                switch(effect) {
+                    case 'glow':
+                        posterText.classList.add('glow-effect');
+                        break;
+                    case 'shadow':
+                        posterText.classList.add('shadow-effect');
+                        break;
+                    case 'outline':
+                        posterText.classList.add('outline-effect');
+                        break;
+                    case 'animate':
+                        posterText.classList.add('animate-text');
+                        break;
+                }
+            });
+        }
+
+        // Utility Functions
+        function setPhrase(phrase) {
+            textInput.value = phrase;
+            updateText();
+        }
+
+        function randomizeDesign() {
+            // Random phrase
+            const phrases = ['DESIGN IS POWER', 'CREATE MORE', 'THINK DIFFERENT', 'INNOVATE TODAY', 'DREAM BIG', 'MAKE IT HAPPEN', 'STAY CREATIVE', 'PUSH BOUNDARIES'];
+            const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+            textInput.value = randomPhrase;
+            updateText();
+            
+            // Random font
+            const fonts = ['Inter', 'Playfair Display', 'Oswald', 'Montserrat', 'Roboto Slab'];
+            fontSelect.value = fonts[Math.floor(Math.random() * fonts.length)];
+            updateFont();
+            
+            // Random colors
+            const colors = ['#2d3748', '#e53e3e', '#3182ce', '#38a169', '#d69e2e', '#805ad5', '#dd6b20'];
+            textColor.value = colors[Math.floor(Math.random() * colors.length)];
+            updateTextColor();
+            
+            // Random background type
+            const bgTypes = ['solid', 'gradient', 'image'];
+            backgroundType.value = bgTypes[Math.floor(Math.random() * bgTypes.length)];
+            updateBackgroundType();
+            
+            // Random size and weight
+            fontSizeRange.value = 80 + Math.random() * 120;
+            updateFontSize();
+            
+            fontWeightRange.value = [100, 300, 400, 600, 700, 800, 900][Math.floor(Math.random() * 7)];
+            updateFontWeight();
+        }
+
+        // Export Functions
+        async function exportPNG() {
+            const canvas = await html2canvas(posterCanvas, {
+                backgroundColor: null,
+                scale: 2,
+                logging: false,
+                useCORS: true
+            });
+            
+            const link = document.createElement('a');
+            link.download = 'typographic-poster.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        async function exportPDF() {
+            const canvas = await html2canvas(posterCanvas, {
+                backgroundColor: null,
+                scale: 2,
+                logging: false,
+                useCORS: true
+            });
+            
+            const { jsPDF } = window.jspdf;
+            const [width, height] = posterSize.value.split('x').map(Number);
+            const pdf = new jsPDF({
+                orientation: width > height ? 'landscape' : 'portrait',
+                unit: 'px',
+                format: [width, height]
+            });
+            
+            pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, width, height);
+            pdf.save('typographic-poster.pdf');
+        }
+
+        // Initialize
+        updatePosterSize();
+        updateFont();
+        updateFontSize();
+        updateFontWeight();
+        updateTextColor();
+        updateBackground();
+    </script>
+</body>
+</html>
