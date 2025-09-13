@@ -1,0 +1,2121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typographic Poster Generator Pro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            color: #333;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            height: 100vh;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            position: relative;
+        }
+
+        .app-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(120, 219, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            overflow-y: auto;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.1),
+                inset 1px 0 0 rgba(255, 255, 255, 0.2);
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+        }
+
+        .sidebar-header {
+            padding: 28px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e40af 100%);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(120, 119, 198, 0.2) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo i {
+            font-size: 32px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 6px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .control-section {
+            padding: 24px;
+            border-bottom: 1px solid rgba(241, 245, 249, 0.8);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .control-section:hover {
+            background: rgba(248, 250, 252, 0.5);
+            transform: translateX(2px);
+        }
+
+        .control-section h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 14px;
+        }
+
+        .control-section h3::before {
+            content: '';
+            width: 3px;
+            height: 16px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-radius: 2px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .control-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #374151;
+            letter-spacing: 0.3px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid rgba(209, 213, 219, 0.5);
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 
+                0 0 0 4px rgba(59, 130, 246, 0.1),
+                0 8px 25px rgba(59, 130, 246, 0.15);
+            transform: translateY(-1px);
+        }
+
+        input:hover, select:hover, textarea:hover {
+            border-color: rgba(59, 130, 246, 0.5);
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 90px;
+            font-family: inherit;
+        }
+
+        .range-input {
+            -webkit-appearance: none;
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            outline: none;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .range-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 4px 12px rgba(59, 130, 246, 0.4),
+                0 0 0 0 rgba(59, 130, 246, 0.2);
+            border: 3px solid white;
+        }
+
+        .range-input::-webkit-slider-thumb:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            transform: scale(1.2);
+            box-shadow: 
+                0 6px 20px rgba(59, 130, 246, 0.5),
+                0 0 0 8px rgba(59, 130, 246, 0.1);
+        }
+
+        .range-input::-webkit-slider-thumb:active {
+            transform: scale(1.1);
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .color-option {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            box-shadow: 
+                0 4px 12px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .color-option::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 12px;
+            padding: 2px;
+            background: linear-gradient(135deg, transparent, transparent);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            transition: all 0.3s ease;
+            opacity: 0;
+        }
+
+        .color-option:hover {
+            transform: scale(1.15) translateY(-2px);
+            box-shadow: 
+                0 8px 25px rgba(0, 0, 0, 0.15),
+                0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        .color-option:hover::before {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            opacity: 1;
+        }
+
+        .color-option.active {
+            border-color: #1e293b;
+            transform: scale(1.1);
+            box-shadow: 
+                0 6px 20px rgba(30, 41, 59, 0.3),
+                0 0 0 4px rgba(30, 41, 59, 0.1);
+        }
+
+        .color-option.active::before {
+            background: linear-gradient(135deg, #1e293b, #374151);
+            opacity: 1;
+        }
+
+        .layout-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 12px;
+        }
+
+        .layout-option {
+            aspect-ratio: 1;
+            border: 2px solid rgba(226, 232, 240, 0.6);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .layout-option::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(139, 92, 246, 0.05));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .layout-option:hover {
+            border-color: #3b82f6;
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 
+                0 12px 30px rgba(59, 130, 246, 0.15),
+                0 0 0 1px rgba(59, 130, 246, 0.1);
+        }
+
+        .layout-option:hover::before {
+            opacity: 1;
+        }
+
+        .layout-option.active {
+            border-color: #1e293b;
+            background: rgba(248, 250, 252, 0.95);
+            box-shadow: 
+                0 8px 25px rgba(30, 41, 59, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        }
+
+        .layout-option.active::before {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.05), rgba(55, 65, 81, 0.05));
+            opacity: 1;
+        }
+
+        .layout-preview {
+            width: 60%;
+            height: 60%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .layout-line {
+            background: linear-gradient(135deg, #64748b, #475569);
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+
+        .layout-option:hover .layout-line {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            transform: scale(1.1);
+        }
+
+        .effects-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .effect-btn {
+            padding: 12px 16px;
+            border: 2px solid rgba(209, 213, 219, 0.5);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .effect-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .effect-btn:hover {
+            border-color: #3b82f6;
+            background: rgba(248, 250, 252, 0.9);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+        }
+
+        .effect-btn:hover::before {
+            opacity: 1;
+        }
+
+        .effect-btn.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border-color: transparent;
+            box-shadow: 
+                0 6px 20px rgba(59, 130, 246, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .effect-btn.active::before {
+            opacity: 0;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 14px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .btn:hover::before {
+            opacity: 1;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            box-shadow: 
+                0 4px 15px rgba(59, 130, 246, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 8px 25px rgba(59, 130, 246, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: rgba(241, 245, 249, 0.8);
+            color: #475569;
+            border: 2px solid rgba(226, 232, 240, 0.6);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(226, 232, 240, 0.9);
+            border-color: rgba(148, 163, 184, 0.8);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+        }
+
+        .toolbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 20px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 
+                0 4px 20px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .toolbar-left {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(248, 250, 252, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 8px;
+            border-radius: 12px;
+            border: 2px solid rgba(226, 232, 240, 0.6);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .zoom-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .zoom-btn:hover {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+            transform: scale(1.1);
+        }
+
+        .zoom-btn:active {
+            transform: scale(0.95);
+        }
+
+        #zoomLevel {
+            font-weight: 600;
+            font-size: 14px;
+            color: #374151;
+            min-width: 48px;
+            text-align: center;
+        }
+
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 50px;
+            background: 
+                radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
+                linear-gradient(45deg, rgba(248, 250, 252, 0.8) 25%, transparent 25%), 
+                linear-gradient(-45deg, rgba(248, 250, 252, 0.8) 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, rgba(248, 250, 252, 0.8) 75%), 
+                linear-gradient(-45deg, transparent 75%, rgba(248, 250, 252, 0.8) 75%);
+            background-size: 
+                100% 100%,
+                100% 100%,
+                30px 30px,
+                30px 30px,
+                30px 30px,
+                30px 30px;
+            background-position: 
+                0 0,
+                0 0,
+                0 0, 
+                0 15px, 
+                15px -15px, 
+                -15px 0px;
+            animation: backgroundShift 20s ease-in-out infinite;
+        }
+
+        @keyframes backgroundShift {
+            0%, 100% { 
+                background-position: 
+                    0 0,
+                    0 0,
+                    0 0, 
+                    0 15px, 
+                    15px -15px, 
+                    -15px 0px;
+            }
+            50% { 
+                background-position: 
+                    100% 100%,
+                    0 100%,
+                    15px 15px, 
+                    15px 0px, 
+                    0px 0px, 
+                    0px 15px;
+            }
+        }
+
+        .poster-canvas {
+            background: white;
+            box-shadow: 
+                0 25px 80px rgba(0, 0, 0, 0.15),
+                0 10px 40px rgba(0, 0, 0, 0.1),
+                0 0 0 1px rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .poster-canvas:hover {
+            box-shadow: 
+                0 35px 100px rgba(0, 0, 0, 0.2),
+                0 15px 50px rgba(0, 0, 0, 0.15),
+                0 0 0 1px rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+        }
+
+        .poster-content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .text-element {
+            position: absolute;
+            cursor: move;
+            user-select: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .text-element:hover {
+            transform: scale(1.02);
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+        }
+
+        .text-element.selected {
+            outline: 3px dashed #3b82f6;
+            outline-offset: 8px;
+            animation: selectedPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes selectedPulse {
+            0%, 100% { 
+                outline-color: #3b82f6; 
+                outline-offset: 8px;
+            }
+            50% { 
+                outline-color: #8b5cf6; 
+                outline-offset: 12px;
+            }
+        }
+
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(20px);
+            color: white;
+            padding: 28px 48px;
+            border-radius: 16px;
+            font-weight: 700;
+            z-index: 1000;
+            box-shadow: 
+                0 25px 80px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            animation: loadingPulse 1.5s ease-in-out infinite;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        @keyframes loadingPulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.05); }
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .preset-btn {
+            padding: 16px;
+            border: 2px solid rgba(226, 232, 240, 0.6);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .preset-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(139, 92, 246, 0.05));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .preset-btn:hover {
+            border-color: #3b82f6;
+            background: rgba(248, 250, 252, 0.95);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+        }
+
+        .preset-btn:hover::before {
+            opacity: 1;
+        }
+
+        .preset-title {
+            font-weight: 700;
+            font-size: 14px;
+            color: #1e293b;
+            margin-bottom: 4px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .preset-desc {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 500;
+            position: relative;
+            z-index: 1;
+        }
+
+        .text-layer-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .layer-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background: rgba(241, 245, 249, 0.8);
+            border: 1px solid rgba(209, 213, 219, 0.5);
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .layer-btn:hover {
+            background: rgba(226, 232, 240, 0.9);
+        }
+
+        .text-case-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .case-btn {
+            padding: 8px;
+            background: rgba(241, 245, 249, 0.8);
+            border: 1px solid rgba(209, 213, 219, 0.5);
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .case-btn:hover {
+            background: rgba(226, 232, 240, 0.9);
+        }
+
+        .case-btn.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .text-align-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .align-btn {
+            padding: 8px;
+            background: rgba(241, 245, 249, 0.8);
+            border: 1px solid rgba(209, 213, 219, 0.5);
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .align-btn:hover {
+            background: rgba(226, 232, 240, 0.9);
+        }
+
+        .align-btn.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .grid-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+                               linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .grid-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: rgba(241, 245, 249, 0.8);
+            border: 1px solid rgba(209, 213, 219, 0.5);
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .grid-toggle:hover {
+            background: rgba(226, 232, 240, 0.9);
+        }
+
+        .grid-toggle.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .snap-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: rgba(241, 245, 249, 0.8);
+            border: 1px solid rgba(209, 213, 219, 0.5);
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .snap-toggle:hover {
+            background: rgba(226, 232, 240, 0.9);
+        }
+
+        .snap-toggle.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .toolbar-right {
+            display: flex;
+            gap: 12px;
+        }
+
+        .history-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: rgba(241, 245, 249, 0.8);
+            border: 1px solid rgba(209, 213, 219, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .history-btn:hover {
+            background: rgba(226, 232, 240, 0.9);
+        }
+
+        .history-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 1200px) {
+            .app-container {
+                grid-template-columns: 320px 1fr;
+            }
+            
+            .control-section {
+                padding: 20px;
+            }
+            
+            .sidebar-header {
+                padding: 24px 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr;
+            }
+            
+            .sidebar {
+                border-right: none;
+                border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+                max-height: 60vh;
+                backdrop-filter: blur(15px);
+            }
+            
+            .canvas-container {
+                padding: 20px;
+            }
+            
+            .toolbar {
+                padding: 16px 20px;
+            }
+            
+            .color-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .layout-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .layout-option {
+                height: 80px;
+            }
+            
+            .effects-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Smooth scroll behavior */
+        .sidebar {
+            scroll-behavior: smooth;
+        }
+
+        /* Enhanced focus states for accessibility */
+        *:focus {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+        }
+
+        /* Custom scrollbar styles for webkit browsers */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+        }
+
+        /* Glass morphism effect for floating elements */
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Subtle animations for better UX */
+        .animate-in {
+            animation: slideIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Enhanced button hover effects */
+        .btn, .effect-btn, .preset-btn {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::after, .effect-btn::after, .preset-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s ease, height 0.3s ease;
+        }
+
+        .btn:active::after, .effect-btn:active::after, .preset-btn:active::after {
+            width: 200px;
+            height: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-font"></i>TypoGen Pro
+                </div>
+                <div class="subtitle">Professional Typography Studio</div>
+            </div>
+
+            <div class="control-section">
+                <h3>📝 Text Content</h3>
+                <div class="control-group">
+                    <label class="control-label">Main Text</label>
+                    <textarea id="mainText" placeholder="Enter your text here...">DESIGN
+IS NOT
+JUST WHAT
+IT LOOKS
+LIKE</textarea>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Subtitle</label>
+                    <input type="text" id="subtitle" placeholder="Optional subtitle" value="Design is how it works">
+                </div>
+                <div class="text-layer-controls">
+                    <button class="layer-btn" id="addTextLayer">
+                        <i class="fas fa-plus"></i> Add Layer
+                    </button>
+                    <button class="layer-btn" id="removeTextLayer">
+                        <i class="fas fa-minus"></i> Remove
+                    </button>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h3>🎨 Typography</h3>
+                <div class="control-group">
+                    <label class="control-label">Font Family</label>
+                    <select id="fontFamily">
+                        <option value="'Inter', sans-serif">Inter (Modern)</option>
+                        <option value="'Helvetica Neue', sans-serif">Helvetica Neue</option>
+                        <option value="'Georgia', serif">Georgia (Serif)</option>
+                        <option value="'Times New Roman', serif">Times New Roman</option>
+                        <option value="'Courier New', monospace">Courier New (Mono)</option>
+                        <option value="'Arial Black', sans-serif">Arial Black</option>
+                        <option value="'Impact', sans-serif">Impact</option>
+                        <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Font Size: <span id="fontSizeValue">72px</span></label>
+                    <input type="range" id="fontSize" min="20" max="200" value="72" class="range-input">
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Font Weight</label>
+                    <select id="fontWeight">
+                        <option value="300">Light</option>
+                        <option value="400">Normal</option>
+                        <option value="600">Semi Bold</option>
+                        <option value="700">Bold</option>
+                        <option value="900" selected>Black</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Letter Spacing: <span id="letterSpacingValue">-2px</span></label>
+                    <input type="range" id="letterSpacing" min="-10" max="20" value="-2" class="range-input">
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Line Height: <span id="lineHeightValue">0.9</span></label>
+                    <input type="range" id="lineHeight" min="0.5" max="2" step="0.1" value="0.9" class="range-input">
+                </div>
+                <div class="text-case-controls">
+                    <button class="case-btn" data-case="uppercase">UPPER</button>
+                    <button class="case-btn" data-case="lowercase">lower</button>
+                    <button class="case-btn" data-case="capitalize">Capital</button>
+                </div>
+                <div class="text-align-controls">
+                    <button class="align-btn" data-align="left"><i class="fas fa-align-left"></i></button>
+                    <button class="align-btn" data-align="center"><i class="fas fa-align-center"></i></button>
+                    <button class="align-btn" data-align="right"><i class="fas fa-align-right"></i></button>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h3>🎯 Layout</h3>
+                <div class="layout-grid">
+                    <div class="layout-option active" data-layout="center">
+                        <div class="layout-preview">
+                            <div class="layout-line" style="width: 80%; height: 3px;"></div>
+                            <div class="layout-line" style="width: 60%; height: 3px;"></div>
+                            <div class="layout-line" style="width: 70%; height: 3px;"></div>
+                        </div>
+                    </div>
+                    <div class="layout-option" data-layout="left">
+                        <div class="layout-preview">
+                            <div class="layout-line" style="width: 80%; height: 3px; align-self: flex-start;"></div>
+                            <div class="layout-line" style="width: 60%; height: 3px; align-self: flex-start;"></div>
+                            <div class="layout-line" style="width: 70%; height: 3px; align-self: flex-start;"></div>
+                        </div>
+                    </div>
+                    <div class="layout-option" data-layout="right">
+                        <div class="layout-preview">
+                            <div class="layout-line" style="width: 80%; height: 3px; align-self: flex-end;"></div>
+                            <div class="layout-line" style="width: 60%; height: 3px; align-self: flex-end;"></div>
+                            <div class="layout-line" style="width: 70%; height: 3px; align-self: flex-end;"></div>
+                        </div>
+                    </div>
+                    <div class="layout-option" data-layout="diagonal">
+                        <div class="layout-preview" style="transform: rotate(-15deg);">
+                            <div class="layout-line" style="width: 60%; height: 3px;"></div>
+                            <div class="layout-line" style="width: 80%; height: 3px;"></div>
+                            <div class="layout-line" style="width: 50%; height: 3px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid-toggle" id="toggleGrid">
+                    <i class="fas fa-th"></i> Show Grid
+                </div>
+                <div class="snap-toggle" id="toggleSnap">
+                    <i class="fas fa-magnet"></i> Enable Snapping
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h3>🌈 Colors</h3>
+                <div class="control-group">
+                    <label class="control-label">Text Color</label>
+                    <div class="color-grid">
+                        <div class="color-option active" style="background: #000000;" data-color="#000000"></div>
+                        <div class="color-option" style="background: #ffffff; border: 1px solid #e2e8f0;" data-color="#ffffff"></div>
+                        <div class="color-option" style="background: #ef4444;" data-color="#ef4444"></div>
+                        <div class="color-option" style="background: #3b82f6;" data-color="#3b82f6"></div>
+                        <div class="color-option" style="background: #10b981;" data-color="#10b981"></div>
+                        <div class="color-option" style="background: #f59e0b;" data-color="#f59e0b"></div>
+                        <div class="color-option" style="background: #8b5cf6;" data-color="#8b5cf6"></div>
+                        <div class="color-option" style="background: #ec4899;" data-color="#ec4899"></div>
+                        <div class="color-option" style="background: #64748b;" data-color="#64748b"></div>
+                        <div class="color-option" style="background: #dc2626;" data-color="#dc2626"></div>
+                        <div class="color-option" style="background: #059669;" data-color="#059669"></div>
+                        <div class="color-option" style="background: #7c3aed;" data-color="#7c3aed"></div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Background</label>
+                    <div class="color-grid">
+                        <div class="color-option active" style="background: #ffffff; border: 1px solid #e2e8f0;" data-bg="#ffffff"></div>
+                        <div class="color-option" style="background: #000000;" data-bg="#000000"></div>
+                        <div class="color-option" style="background: #f8fafc;" data-bg="#f8fafc"></div>
+                        <div class="color-option" style="background: #1e293b;" data-bg="#1e293b"></div>
+                        <div class="color-option" style="background: #fef3c7;" data-bg="#fef3c7"></div>
+                        <div class="color-option" style="background: #dbeafe;" data-bg="#dbeafe"></div>
+                        <div class="color-option" style="background: #dcfce7;" data-bg="#dcfce7"></div>
+                        <div class="color-option" style="background: #fce7f3;" data-bg="#fce7f3"></div>
+                        <div class="color-option" style="background: #f3e8ff;" data-bg="#f3e8ff"></div>
+                        <div class="color-option" style="background: #fef2f2;" data-bg="#fef2f2"></div>
+                        <div class="color-option" style="background: #ecfdf5;" data-bg="#ecfdf5"></div>
+                        <div class="color-option" style="background: #fffbeb;" data-bg="#fffbeb"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h3>✨ Effects</h3>
+                <div class="effects-grid">
+                    <div class="effect-btn" data-effect="shadow">Drop Shadow</div>
+                    <div class="effect-btn" data-effect="gradient">Gradient</div>
+                    <div class="effect-btn" data-effect="outline">Text Outline</div>
+                    <div class="effect-btn" data-effect="glow">Glow Effect</div>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h3>📐 Canvas Size</h3>
+                <div class="control-group">
+                    <label class="control-label">Format</label>
+                    <select id="canvasSize">
+                        <option value="800x1000">Poster (800x1000px)</option>
+                        <option value="1080x1080">Square (1080x1080px)</option>
+                        <option value="1920x1080">Landscape (1920x1080px)</option>
+                        <option value="1080x1920">Story (1080x1920px)</option>
+                        <option value="2480x3508">A4 Print (2480x3508px)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h3>🎨 Design Presets</h3>
+                <div class="preset-buttons">
+                    <div class="preset-btn" data-preset="minimal">
+                        <div class="preset-title">Minimal Swiss</div>
+                        <div class="preset-desc">Clean, geometric, timeless</div>
+                    </div>
+                    <div class="preset-btn" data-preset="bold">
+                        <div class="preset-title">Bold Impact</div>
+                        <div class="preset-desc">High contrast, powerful</div>
+                    </div>
+                    <div class="preset-btn" data-preset="vintage">
+                        <div class="preset-title">Vintage Poster</div>
+                        <div class="preset-desc">Retro colors, classic feel</div>
+                    </div>
+                    <div class="preset-btn" data-preset="modern">
+                        <div class="preset-title">Modern Gradient</div>
+                        <div class="preset-desc">Contemporary, vibrant</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" id="exportPNG">
+                        <i class="fas fa-image"></i> PNG
+                    </button>
+                    <button class="btn btn-secondary" id="exportJPG">
+                        <i class="fas fa-image"></i> JPG
+                    </button>
+                    <button class="btn btn-primary" id="exportPDF">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </button>
+                </div>
+                <button class="btn btn-secondary" id="randomize" style="width: 100%; margin-top: 8px;">
+                    <i class="fas fa-dice"></i> Randomize
+                </button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <div class="zoom-controls">
+                        <button class="zoom-btn" id="zoomOut">-</button>
+                        <span id="zoomLevel">100%</span>
+                        <button class="zoom-btn" id="zoomIn">+</button>
+                    </div>
+                </div>
+                <div class="toolbar-right">
+                    <button class="history-btn" id="undoBtn" title="Undo">
+                        <i class="fas fa-undo"></i>
+                    </button>
+                    <button class="history-btn" id="redoBtn" title="Redo">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="canvas-container">
+                <div class="poster-canvas" id="posterCanvas">
+                    <div class="poster-content" id="posterContent">
+                        <!-- Dynamic content will be generated here -->
+                    </div>
+                    <div class="grid-overlay" id="gridOverlay" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class TypographicPosterGenerator {
+            constructor() {
+                this.currentZoom = 1;
+                this.currentLayout = 'center';
+                this.currentTextColor = '#000000';
+                this.currentBgColor = '#ffffff';
+                this.activeEffects = new Set();
+                this.canvasWidth = 800;
+                this.canvasHeight = 1000;
+                this.textCase = 'uppercase';
+                this.textAlign = 'center';
+                this.textLayers = [];
+                this.activeLayerIndex = 0;
+                this.undoStack = [];
+                this.redoStack = [];
+                this.maxHistory = 50;
+                this.isDragging = false;
+                this.dragOffsetX = 0;
+                this.dragOffsetY = 0;
+                this.showGrid = false;
+                this.snapToGrid = false;
+                this.gridSize = 20;
+                
+                this.init();
+                this.setupEventListeners();
+                this.updatePoster();
+            }
+
+            init() {
+                this.updateCanvasSize();
+                this.saveState();
+                this.addTextLayer();
+            }
+
+            setupEventListeners() {
+                // Text controls
+                document.getElementById('mainText').addEventListener('input', () => this.updatePoster());
+                document.getElementById('subtitle').addEventListener('input', () => this.updatePoster());
+                
+                // Typography controls
+                document.getElementById('fontFamily').addEventListener('change', () => this.updatePoster());
+                
+                const fontSize = document.getElementById('fontSize');
+                fontSize.addEventListener('input', (e) => {
+                    document.getElementById('fontSizeValue').textContent = e.target.value + 'px';
+                    this.updatePoster();
+                });
+
+                document.getElementById('fontWeight').addEventListener('change', () => this.updatePoster());
+                
+                const letterSpacing = document.getElementById('letterSpacing');
+                letterSpacing.addEventListener('input', (e) => {
+                    document.getElementById('letterSpacingValue').textContent = e.target.value + 'px';
+                    this.updatePoster();
+                });
+
+                const lineHeight = document.getElementById('lineHeight');
+                lineHeight.addEventListener('input', (e) => {
+                    document.getElementById('lineHeightValue').textContent = e.target.value;
+                    this.updatePoster();
+                });
+
+                // Layout controls
+                document.querySelectorAll('.layout-option').forEach(option => {
+                    option.addEventListener('click', (e) => {
+                        document.querySelectorAll('.layout-option').forEach(o => o.classList.remove('active'));
+                        option.classList.add('active');
+                        this.currentLayout = option.dataset.layout;
+                        this.updatePoster();
+                    });
+                });
+
+                // Color controls
+                document.querySelectorAll('[data-color]').forEach(color => {
+                    color.addEventListener('click', (e) => {
+                        document.querySelectorAll('[data-color]').forEach(c => c.classList.remove('active'));
+                        color.classList.add('active');
+                        this.currentTextColor = color.dataset.color;
+                        this.updatePoster();
+                    });
+                });
+
+                document.querySelectorAll('[data-bg]').forEach(bg => {
+                    bg.addEventListener('click', (e) => {
+                        document.querySelectorAll('[data-bg]').forEach(b => b.classList.remove('active'));
+                        bg.classList.add('active');
+                        this.currentBgColor = bg.dataset.bg;
+                        this.updatePoster();
+                    });
+                });
+
+                // Effects
+                document.querySelectorAll('.effect-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const effect = btn.dataset.effect;
+                        if (this.activeEffects.has(effect)) {
+                            this.activeEffects.delete(effect);
+                            btn.classList.remove('active');
+                        } else {
+                            this.activeEffects.add(effect);
+                            btn.classList.add('active');
+                        }
+                        this.updatePoster();
+                    });
+                });
+
+                // Canvas size
+                document.getElementById('canvasSize').addEventListener('change', (e) => {
+                    const [width, height] = e.target.value.split('x').map(Number);
+                    this.canvasWidth = width;
+                    this.canvasHeight = height;
+                    this.updateCanvasSize();
+                    this.updatePoster();
+                });
+
+                // Presets
+                document.querySelectorAll('[data-preset]').forEach(preset => {
+                    preset.addEventListener('click', (e) => {
+                        this.applyPreset(preset.dataset.preset);
+                    });
+                });
+
+                // Zoom controls
+                document.getElementById('zoomIn').addEventListener('click', () => this.adjustZoom(0.1));
+                document.getElementById('zoomOut').addEventListener('click', () => this.adjustZoom(-0.1));
+
+                // Export buttons
+                document.getElementById('exportPNG').addEventListener('click', () => this.exportPNG());
+                document.getElementById('exportJPG').addEventListener('click', () => this.exportJPG());
+                document.getElementById('exportPDF').addEventListener('click', () => this.exportPDF());
+                
+                // Randomize
+                document.getElementById('randomize').addEventListener('click', () => this.randomizeDesign());
+                
+                // Text case controls
+                document.querySelectorAll('.case-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.textCase = btn.dataset.case;
+                        document.querySelectorAll('.case-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.updatePoster();
+                    });
+                });
+                
+                // Text align controls
+                document.querySelectorAll('.align-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.textAlign = btn.dataset.align;
+                        document.querySelectorAll('.align-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.updatePoster();
+                    });
+                });
+                
+                // Layer controls
+                document.getElementById('addTextLayer').addEventListener('click', () => this.addTextLayer());
+                document.getElementById('removeTextLayer').addEventListener('click', () => this.removeTextLayer());
+                
+                // Grid controls
+                document.getElementById('toggleGrid').addEventListener('click', () => this.toggleGrid());
+                document.getElementById('toggleSnap').addEventListener('click', () => this.toggleSnap());
+                
+                // History controls
+                document.getElementById('undoBtn').addEventListener('click', () => this.undo());
+                document.getElementById('redoBtn').addEventListener('click', () => this.redo());
+            }
+
+            updateCanvasSize() {
+                const canvas = document.getElementById('posterCanvas');
+                const maxWidth = 400;
+                const maxHeight = 600;
+                
+                let displayWidth, displayHeight;
+                const aspectRatio = this.canvasWidth / this.canvasHeight;
+                
+                if (aspectRatio > maxWidth / maxHeight) {
+                    displayWidth = maxWidth;
+                    displayHeight = maxWidth / aspectRatio;
+                } else {
+                    displayHeight = maxHeight;
+                    displayWidth = maxHeight * aspectRatio;
+                }
+                
+                canvas.style.width = displayWidth + 'px';
+                canvas.style.height = displayHeight + 'px';
+            }
+
+            addTextLayer() {
+                const newLayer = {
+                    id: Date.now(),
+                    content: this.textLayers.length > 0 ? 'New Text Layer' : document.getElementById('mainText').value,
+                    x: 100,
+                    y: 100,
+                    width: 300,
+                    height: 100
+                };
+                
+                this.textLayers.push(newLayer);
+                this.activeLayerIndex = this.textLayers.length - 1;
+                this.updatePoster();
+            }
+
+            removeTextLayer() {
+                if (this.textLayers.length > 1) {
+                    this.textLayers.splice(this.activeLayerIndex, 1);
+                    this.activeLayerIndex = Math.max(0, this.activeLayerIndex - 1);
+                    this.updatePoster();
+                }
+            }
+
+            saveState() {
+                const state = {
+                    layers: [...this.textLayers],
+                    layout: this.currentLayout,
+                    textColor: this.currentTextColor,
+                    bgColor: this.currentBgColor,
+                    effects: [...this.activeEffects],
+                    canvasSize: [this.canvasWidth, this.canvasHeight],
+                    textCase: this.textCase,
+                    textAlign: this.textAlign
+                };
+                
+                this.undoStack.push(state);
+                this.redoStack = [];
+                
+                // Limit history size
+                if (this.undoStack.length > this.maxHistory) {
+                    this.undoStack.shift();
+                }
+                
+                this.updateHistoryButtons();
+            }
+
+            restoreState(state) {
+                this.textLayers = [...state.layers];
+                this.currentLayout = state.layout;
+                this.currentTextColor = state.textColor;
+                this.currentBgColor = state.bgColor;
+                this.activeEffects = new Set(state.effects);
+                this.canvasWidth = state.canvasSize[0];
+                this.canvasHeight = state.canvasSize[1];
+                this.textCase = state.textCase;
+                this.textAlign = state.textAlign;
+                
+                // Update UI to match state
+                this.updateCanvasSize();
+                
+                // Update effects buttons
+                document.querySelectorAll('.effect-btn').forEach(btn => {
+                    btn.classList.toggle('active', this.activeEffects.has(btn.dataset.effect));
+                });
+                
+                // Update layout buttons
+                document.querySelectorAll('.layout-option').forEach(option => {
+                    option.classList.toggle('active', option.dataset.layout === this.currentLayout);
+                });
+                
+                // Update text case buttons
+                document.querySelectorAll('.case-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.case === this.textCase);
+                });
+                
+                // Update text align buttons
+                document.querySelectorAll('.align-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.align === this.textAlign);
+                });
+                
+                this.updatePoster();
+            }
+
+            undo() {
+                if (this.undoStack.length > 1) {
+                    const currentState = this.undoStack.pop();
+                    this.redoStack.push(currentState);
+                    const prevState = this.undoStack[this.undoStack.length - 1];
+                    this.restoreState(prevState);
+                }
+            }
+
+            redo() {
+                if (this.redoStack.length > 0) {
+                    const nextState = this.redoStack.pop();
+                    this.undoStack.push(nextState);
+                    this.restoreState(nextState);
+                }
+            }
+
+            updateHistoryButtons() {
+                document.getElementById('undoBtn').disabled = this.undoStack.length <= 1;
+                document.getElementById('redoBtn').disabled = this.redoStack.length === 0;
+            }
+
+            toggleGrid() {
+                this.showGrid = !this.showGrid;
+                const gridToggle = document.getElementById('toggleGrid');
+                const gridOverlay = document.getElementById('gridOverlay');
+                
+                if (this.showGrid) {
+                    gridToggle.classList.add('active');
+                    gridOverlay.style.display = 'block';
+                } else {
+                    gridToggle.classList.remove('active');
+                    gridOverlay.style.display = 'none';
+                }
+            }
+
+            toggleSnap() {
+                this.snapToGrid = !this.snapToGrid;
+                const snapToggle = document.getElementById('toggleSnap');
+                
+                if (this.snapToGrid) {
+                    snapToggle.classList.add('active');
+                } else {
+                    snapToggle.classList.remove('active');
+                }
+            }
+
+            updatePoster() {
+                this.saveState();
+                const posterContent = document.getElementById('posterContent');
+                const mainText = document.getElementById('mainText').value;
+                const subtitle = document.getElementById('subtitle').value;
+                
+                // Clear existing content
+                posterContent.innerHTML = '';
+                
+                // Apply background
+                posterContent.style.background = this.currentBgColor;
+                
+                // Create text layers
+                for (let i = 0; i < this.textLayers.length; i++) {
+                    const layer = this.textLayers[i];
+                    const isActive = i === this.activeLayerIndex;
+                    
+                    const textElement = document.createElement('div');
+                    textElement.className = `text-element ${isActive ? 'selected' : ''}`;
+                    textElement.textContent = layer.content;
+                    textElement.dataset.layerId = layer.id;
+                    
+                    // Apply typography
+                    const fontFamily = document.getElementById('fontFamily').value;
+                    const fontSize = document.getElementById('fontSize').value;
+                    const fontWeight = document.getElementById('fontWeight').value;
+                    const letterSpacing = document.getElementById('letterSpacing').value;
+                    const lineHeight = document.getElementById('lineHeight').value;
+                    
+                    textElement.style.fontFamily = fontFamily;
+                    textElement.style.fontSize = fontSize + 'px';
+                    textElement.style.fontWeight = fontWeight;
+                    textElement.style.letterSpacing = letterSpacing + 'px';
+                    textElement.style.lineHeight = lineHeight;
+                    textElement.style.color = this.currentTextColor;
+                    textElement.style.textTransform = this.textCase;
+                    textElement.style.textAlign = this.textAlign;
+                    
+                    // Apply layout
+                    this.applyLayout(textElement, i);
+                    
+                    // Apply effects
+                    this.applyEffects(textElement);
+                    
+                    // Position
+                    textElement.style.left = layer.x + 'px';
+                    textElement.style.top = layer.y + 'px';
+                    
+                    // Add drag events
+                    textElement.addEventListener('mousedown', (e) => {
+                        this.isDragging = true;
+                        this.activeLayerIndex = i;
+                        this.dragOffsetX = e.clientX - textElement.getBoundingClientRect().left;
+                        this.dragOffsetY = e.clientY - textElement.getBoundingClientRect().top;
+                        this.updatePoster();
+                    });
+                    
+                    posterContent.appendChild(textElement);
+                }
+                
+                // Add event listeners for dragging
+                if (!this.dragMoveHandler) {
+                    this.dragMoveHandler = (e) => {
+                        if (this.isDragging && this.textLayers[this.activeLayerIndex]) {
+                            const layer = this.textLayers[this.activeLayerIndex];
+                            const canvas = document.getElementById('posterCanvas');
+                            const rect = canvas.getBoundingClientRect();
+                            
+                            let x = e.clientX - rect.left - this.dragOffsetX;
+                            let y = e.clientY - rect.top - this.dragOffsetY;
+                            
+                            // Snap to grid if enabled
+                            if (this.snapToGrid) {
+                                x = Math.round(x / this.gridSize) * this.gridSize;
+                                y = Math.round(y / this.gridSize) * this.gridSize;
+                            }
+                            
+                            // Update position
+                            layer.x = x;
+                            layer.y = y;
+                            
+                            this.updatePoster();
+                        }
+                    };
+                    
+                    this.dragEndHandler = () => {
+                        this.isDragging = false;
+                        this.saveState();
+                    };
+                    
+                    document.addEventListener('mousemove', this.dragMoveHandler);
+                    document.addEventListener('mouseup', this.dragEndHandler);
+                }
+            }
+
+            applyLayout(element, layerIndex) {
+                // Only apply auto-layout to the first layer
+                if (layerIndex === 0) {
+                    const containerWidth = this.canvasWidth;
+                    const containerHeight = this.canvasHeight;
+                    
+                    element.style.position = 'absolute';
+                    element.style.maxWidth = '90%';
+                    
+                    switch (this.currentLayout) {
+                        case 'center':
+                            element.style.left = '50%';
+                            element.style.top = '45%';
+                            element.style.transform = 'translate(-50%, -50%)';
+                            element.style.textAlign = 'center';
+                            break;
+                            
+                        case 'left':
+                            element.style.left = '10%';
+                            element.style.top = '45%';
+                            element.style.transform = 'translateY(-50%)';
+                            element.style.textAlign = 'left';
+                            break;
+                            
+                        case 'right':
+                            element.style.right = '10%';
+                            element.style.top = '45%';
+                            element.style.transform = 'translateY(-50%)';
+                            element.style.textAlign = 'right';
+                            break;
+                            
+                        case 'diagonal':
+                            element.style.left = '50%';
+                            element.style.top = '45%';
+                            element.style.transform = 'translate(-50%, -50%) rotate(-5deg)';
+                            element.style.textAlign = 'center';
+                            break;
+                    }
+                }
+            }
+
+            applyEffects(element) {
+                let textShadow = '';
+                let background = '';
+                let webkitTextStroke = '';
+                let filter = '';
+                
+                if (this.activeEffects.has('shadow')) {
+                    textShadow += '4px 4px 12px rgba(0,0,0,0.3)';
+                }
+                
+                if (this.activeEffects.has('gradient')) {
+                    element.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                    element.style.webkitBackgroundClip = 'text';
+                    element.style.webkitTextFillColor = 'transparent';
+                    element.style.backgroundClip = 'text';
+                }
+                
+                if (this.activeEffects.has('outline')) {
+                    webkitTextStroke = '2px ' + (this.currentBgColor === '#ffffff' ? '#000000' : '#ffffff');
+                }
+                
+                if (this.activeEffects.has('glow')) {
+                    textShadow += (textShadow ? ', ' : '') + `0 0 20px ${this.currentTextColor}40, 0 0 40px ${this.currentTextColor}20`;
+                }
+                
+                element.style.textShadow = textShadow;
+                element.style.webkitTextStroke = webkitTextStroke;
+                element.style.filter = filter;
+            }
+
+            applyPreset(presetName) {
+                const presets = {
+                    minimal: {
+                        fontFamily: "'Helvetica Neue', sans-serif",
+                        fontSize: 60,
+                        fontWeight: 300,
+                        letterSpacing: -1,
+                        lineHeight: 1.1,
+                        textColor: '#000000',
+                        bgColor: '#ffffff',
+                        layout: 'left',
+                        effects: [],
+                        textCase: 'uppercase',
+                        textAlign: 'left'
+                    },
+                    bold: {
+                        fontFamily: "'Arial Black', sans-serif",
+                        fontSize: 90,
+                        fontWeight: 900,
+                        letterSpacing: -3,
+                        lineHeight: 0.8,
+                        textColor: '#ffffff',
+                        bgColor: '#000000',
+                        layout: 'center',
+                        effects: ['shadow'],
+                        textCase: 'uppercase',
+                        textAlign: 'center'
+                    },
+                    vintage: {
+                        fontFamily: "'Georgia', serif",
+                        fontSize: 70,
+                        fontWeight: 700,
+                        letterSpacing: 2,
+                        lineHeight: 1.0,
+                        textColor: '#8b5cf6',
+                        bgColor: '#fef3c7',
+                        layout: 'center',
+                        effects: ['outline'],
+                        textCase: 'uppercase',
+                        textAlign: 'center'
+                    },
+                    modern: {
+                        fontFamily: "'Inter', sans-serif",
+                        fontSize: 75,
+                        fontWeight: 600,
+                        letterSpacing: -2,
+                        lineHeight: 0.9,
+                        textColor: '#3b82f6',
+                        bgColor: '#1e293b',
+                        layout: 'diagonal',
+                        effects: ['gradient', 'glow'],
+                        textCase: 'uppercase',
+                        textAlign: 'center'
+                    }
+                };
+                
+                const preset = presets[presetName];
+                if (!preset) return;
+                
+                // Apply preset values
+                document.getElementById('fontFamily').value = preset.fontFamily;
+                document.getElementById('fontSize').value = preset.fontSize;
+                document.getElementById('fontSizeValue').textContent = preset.fontSize + 'px';
+                document.getElementById('fontWeight').value = preset.fontWeight;
+                document.getElementById('letterSpacing').value = preset.letterSpacing;
+                document.getElementById('letterSpacingValue').textContent = preset.letterSpacing + 'px';
+                document.getElementById('lineHeight').value = preset.lineHeight;
+                document.getElementById('lineHeightValue').textContent = preset.lineHeight;
+                
+                // Update colors
+                this.currentTextColor = preset.textColor;
+                this.currentBgColor = preset.bgColor;
+                
+                // Update color selections
+                document.querySelectorAll('[data-color]').forEach(c => {
+                    c.classList.toggle('active', c.dataset.color === preset.textColor);
+                });
+                document.querySelectorAll('[data-bg]').forEach(b => {
+                    b.classList.toggle('active', b.dataset.bg === preset.bgColor);
+                });
+                
+                // Update layout
+                this.currentLayout = preset.layout;
+                document.querySelectorAll('.layout-option').forEach(l => {
+                    l.classList.toggle('active', l.dataset.layout === preset.layout);
+                });
+                
+                // Update effects
+                this.activeEffects.clear();
+                document.querySelectorAll('.effect-btn').forEach(btn => btn.classList.remove('active'));
+                preset.effects.forEach(effect => {
+                    this.activeEffects.add(effect);
+                    document.querySelector(`[data-effect="${effect}"]`).classList.add('active');
+                });
+                
+                // Update text case and align
+                this.textCase = preset.textCase;
+                this.textAlign = preset.textAlign;
+                document.querySelectorAll('.case-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.case === preset.textCase);
+                });
+                document.querySelectorAll('.align-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.align === preset.textAlign);
+                });
+                
+                this.updatePoster();
+            }
+
+            randomizeDesign() {
+                const fonts = ["'Inter', sans-serif", "'Helvetica Neue', sans-serif", "'Georgia', serif", "'Impact', sans-serif"];
+                const colors = ['#000000', '#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+                const bgColors = ['#ffffff', '#000000', '#f8fafc', '#1e293b', '#fef3c7', '#dbeafe', '#dcfce7'];
+                const layouts = ['center', 'left', 'right', 'diagonal'];
+                const weights = ['300', '400', '600', '700', '900'];
+                const cases = ['uppercase', 'lowercase', 'capitalize'];
+                const aligns = ['left', 'center', 'right'];
+                
+                // Randomize values
+                document.getElementById('fontFamily').value = fonts[Math.floor(Math.random() * fonts.length)];
+                document.getElementById('fontSize').value = 50 + Math.random() * 100;
+                document.getElementById('fontSizeValue').textContent = document.getElementById('fontSize').value + 'px';
+                document.getElementById('fontWeight').value = weights[Math.floor(Math.random() * weights.length)];
+                
+                const randomLetterSpacing = -5 + Math.random() * 15;
+                document.getElementById('letterSpacing').value = randomLetterSpacing;
+                document.getElementById('letterSpacingValue').textContent = Math.round(randomLetterSpacing) + 'px';
+                
+                const randomLineHeight = 0.7 + Math.random() * 0.8;
+                document.getElementById('lineHeight').value = randomLineHeight;
+                document.getElementById('lineHeightValue').textContent = randomLineHeight.toFixed(1);
+                
+                // Randomize colors
+                this.currentTextColor = colors[Math.floor(Math.random() * colors.length)];
+                this.currentBgColor = bgColors[Math.floor(Math.random() * bgColors.length)];
+                
+                // Update color selections
+                document.querySelectorAll('[data-color]').forEach(c => {
+                    c.classList.toggle('active', c.dataset.color === this.currentTextColor);
+                });
+                document.querySelectorAll('[data-bg]').forEach(b => {
+                    b.classList.toggle('active', b.dataset.bg === this.currentBgColor);
+                });
+                
+                // Randomize layout
+                this.currentLayout = layouts[Math.floor(Math.random() * layouts.length)];
+                document.querySelectorAll('.layout-option').forEach(l => {
+                    l.classList.toggle('active', l.dataset.layout === this.currentLayout);
+                });
+                
+                // Randomize effects
+                this.activeEffects.clear();
+                document.querySelectorAll('.effect-btn').forEach(btn => btn.classList.remove('active'));
+                const effects = ['shadow', 'gradient', 'outline', 'glow'];
+                const numEffects = Math.floor(Math.random() * 3);
+                for (let i = 0; i < numEffects; i++) {
+                    const effect = effects[Math.floor(Math.random() * effects.length)];
+                    this.activeEffects.add(effect);
+                    document.querySelector(`[data-effect="${effect}"]`).classList.add('active');
+                }
+                
+                // Randomize text case and align
+                this.textCase = cases[Math.floor(Math.random() * cases.length)];
+                this.textAlign = aligns[Math.floor(Math.random() * aligns.length)];
+                document.querySelectorAll('.case-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.case === this.textCase);
+                });
+                document.querySelectorAll('.align-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.align === this.textAlign);
+                });
+                
+                this.updatePoster();
+            }
+
+            adjustZoom(delta) {
+                this.currentZoom = Math.max(0.5, Math.min(2, this.currentZoom + delta));
+                document.getElementById('zoomLevel').textContent = Math.round(this.currentZoom * 100) + '%';
+                
+                const canvas = document.getElementById('posterCanvas');
+                canvas.style.transform = `scale(${this.currentZoom})`;
+            }
+
+            showLoading(message) {
+                const loading = document.createElement('div');
+                loading.className = 'loading';
+                loading.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${message}`;
+                loading.id = 'loadingIndicator';
+                document.body.appendChild(loading);
+            }
+
+            hideLoading() {
+                const loading = document.getElementById('loadingIndicator');
+                if (loading) loading.remove();
+            }
+
+            async exportPNG() {
+                this.showLoading('Generating PNG...');
+                
+                try {
+                    const canvas = document.getElementById('posterContent');
+                    const originalTransform = canvas.style.transform;
+                    
+                    // Temporarily scale up for high quality export
+                    canvas.style.transform = 'scale(2)';
+                    canvas.style.transformOrigin = 'top left';
+                    
+                    const dataUrl = await html2canvas(canvas, {
+                        width: this.canvasWidth,
+                        height: this.canvasHeight,
+                        scale: 2,
+                        backgroundColor: this.currentBgColor,
+                        useCORS: true,
+                        allowTaint: true
+                    }).then(canvas => canvas.toDataURL('image/png', 1.0));
+                    
+                    // Restore original transform
+                    canvas.style.transform = originalTransform;
+                    
+                    // Create download link
+                    const link = document.createElement('a');
+                    link.download = `typographic-poster-${Date.now()}.png`;
+                    link.href = dataUrl;
+                    link.click();
+                    
+                } catch (error) {
+                    console.error('Export failed:', error);
+                    alert('Export failed. Please try again.');
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            async exportJPG() {
+                this.showLoading('Generating JPG...');
+                
+                try {
+                    const canvas = document.getElementById('posterContent');
+                    const originalTransform = canvas.style.transform;
+                    
+                    // Temporarily scale up for high quality export
+                    canvas.style.transform = 'scale(2)';
+                    canvas.style.transformOrigin = 'top left';
+                    
+                    const dataUrl = await html2canvas(canvas, {
+                        width: this.canvasWidth,
+                        height: this.canvasHeight,
+                        scale: 2,
+                        backgroundColor: this.currentBgColor,
+                        useCORS: true,
+                        allowTaint: true
+                    }).then(canvas => canvas.toDataURL('image/jpeg', 0.95));
+                    
+                    // Restore original transform
+                    canvas.style.transform = originalTransform;
+                    
+                    // Create download link
+                    const link = document.createElement('a');
+                    link.download = `typographic-poster-${Date.now()}.jpg`;
+                    link.href = dataUrl;
+                    link.click();
+                    
+                } catch (error) {
+                    console.error('Export failed:', error);
+                    alert('Export failed. Please try again.');
+                } finally {
+                    this.hideLoading();
+                }
+            }
+
+            async exportPDF() {
+                this.showLoading('Generating PDF...');
+                
+                try {
+                    const canvas = document.getElementById('posterContent');
+                    
+                    const dataUrl = await html2canvas(canvas, {
+                        width: this.canvasWidth,
+                        height: this.canvasHeight,
+                        scale: 2,
+                        backgroundColor: this.currentBgColor,
+                        useCORS: true,
+                        allowTaint: true
+                    }).then(canvas => canvas.toDataURL('image/png', 1.0));
+                    
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF({
+                        orientation: this.canvasWidth > this.canvasHeight ? 'landscape' : 'portrait',
+                        unit: 'px',
+                        format: [this.canvasWidth, this.canvasHeight]
+                    });
+                    
+                    pdf.addImage(dataUrl, 'PNG', 0, 0, this.canvasWidth, this.canvasHeight);
+                    pdf.save(`typographic-poster-${Date.now()}.pdf`);
+                    
+                } catch (error) {
+                    console.error('PDF export failed:', error);
+                    alert('PDF export failed. Please try again.');
+                } finally {
+                    this.hideLoading();
+                }
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            new TypographicPosterGenerator();
+        });
+    </script>
+</body>
+</html>
