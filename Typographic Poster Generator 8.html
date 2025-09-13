@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TypoGen Pro - Advanced Typographic Poster Generator</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&family=Oswald:wght@300;400;500;600;700&family=Bebas+Neue&family=Montserrat:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&family=Roboto+Condensed:wght@300;400;700&family=Source+Sans+Pro:wght@300;400;600;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0078d4;
+            --primary-dark: #106ebe;
+            --secondary: #00bcf2;
+            --success: #107c10;
+            --warning: #ffb900;
+            --danger: #d13438;
+            --dark: #323130;
+            --light: #f3f2f1;
+            --white: #ffffff;
+            --border: #edebe9;
+            --shadow: rgba(0, 0, 0, 0.133);
+            --shadow-deep: rgba(0, 0, 0, 0.25);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--dark);
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr 300px;
+            gap: 25px;
+            background: var(--white);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 20px 40px var(--shadow-deep);
+            min-height: 80vh;
+        }
+
+        .sidebar {
+            background: var(--light);
+            border-radius: 12px;
+            padding: 20px;
+            overflow-y: auto;
+            max-height: 80vh;
+        }
+
+        .sidebar h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .control-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: var(--dark);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            background: var(--white);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.1);
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--light);
+            color: var(--dark);
+            border: 2px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .layout-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .layout-option {
+            aspect-ratio: 1;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--white);
+            position: relative;
+        }
+
+        .layout-option:hover {
+            border-color: var(--primary);
+            transform: scale(1.02);
+        }
+
+        .layout-option.active {
+            border-color: var(--primary);
+            background: rgba(0, 120, 212, 0.05);
+        }
+
+        .layout-option i {
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+
+        .canvas-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .poster-canvas {
+            width: 400px;
+            height: 566px;
+            background: var(--white);
+            border-radius: 8px;
+            box-shadow: 0 10px 30px var(--shadow);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .poster-text {
+            user-select: none;
+            line-height: 0.9;
+            word-wrap: break-word;
+            max-width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .properties-panel {
+            background: var(--light);
+            border-radius: 12px;
+            padding: 20px;
+            overflow-y: auto;
+            max-height: 80vh;
+        }
+
+        .color-picker-group {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 8px;
+            align-items: end;
+        }
+
+        .color-picker {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .color-picker:hover {
+            transform: scale(1.1);
+        }
+
+        .preset-colors {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            margin-top: 8px;
+        }
+
+        .preset-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .preset-color:hover {
+            transform: scale(1.1);
+            border-color: var(--dark);
+        }
+
+        .slider-group {
+            margin-top: 10px;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--border);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+        }
+
+        .export-section {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .export-section h3 {
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .export-options {
+            display: grid;
+            gap: 10px;
+        }
+
+        .btn-export {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-export:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .advanced-controls {
+            margin-top: 15px;
+        }
+
+        .toggle-group {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .toggle {
+            position: relative;
+            width: 50px;
+            height: 24px;
+            background: var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .toggle.active {
+            background: var(--primary);
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.2s ease;
+        }
+
+        .toggle.active::after {
+            transform: translateX(26px);
+        }
+
+        .font-size-display {
+            font-size: 0.8rem;
+            color: var(--primary);
+            font-weight: 600;
+            text-align: center;
+            margin-top: 5px;
+        }
+
+        .quality-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.8rem;
+            color: var(--success);
+            margin-top: 10px;
+        }
+
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 300px 1fr;
+                gap: 20px;
+            }
+            
+            .properties-panel {
+                grid-column: 1 / -1;
+                margin-top: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .poster-canvas {
+                width: 300px;
+                height: 424px;
+                padding: 30px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .loading-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-right: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .gradient-bg {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7);
+            background-size: 300% 300%;
+            animation: gradientShift 8s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .text-shadow {
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .text-outline {
+            -webkit-text-stroke: 2px currentColor;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <span>Processing your design...</span>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-palette"></i> TypoGen Pro</h1>
+            <p>Professional Typographic Poster Generator with Advanced Features</p>
+        </div>
+
+        <div class="main-grid">
+            <div class="sidebar">
+                <div class="control-group">
+                    <h3><i class="fas fa-font"></i> Typography</h3>
+                    
+                    <div class="form-group">
+                        <label>Text Content</label>
+                        <textarea class="form-control" id="textContent" rows="3" placeholder="Enter your poster text...">DESIGN
+IS
+POWER</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Font Family</label>
+                        <select class="form-control" id="fontFamily">
+                            <option value="Inter">Inter (Clean & Modern)</option>
+                            <option value="Playfair Display">Playfair Display (Elegant)</option>
+                            <option value="Oswald">Oswald (Bold & Condensed)</option>
+                            <option value="Bebas Neue" selected>Bebas Neue (Impact)</option>
+                            <option value="Montserrat">Montserrat (Versatile)</option>
+                            <option value="Poppins">Poppins (Friendly)</option>
+                            <option value="Roboto Condensed">Roboto Condensed</option>
+                            <option value="Source Sans Pro">Source Sans Pro</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Font Size</label>
+                        <input type="range" class="slider" id="fontSize" min="20" max="120" value="64">
+                        <div class="font-size-display" id="fontSizeDisplay">64px</div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3><i class="fas fa-th-large"></i> Layout</h3>
+                    
+                    <div class="layout-grid">
+                        <div class="layout-option active" data-layout="center">
+                            <i class="fas fa-align-center"></i>
+                        </div>
+                        <div class="layout-option" data-layout="left">
+                            <i class="fas fa-align-left"></i>
+                        </div>
+                        <div class="layout-option" data-layout="right">
+                            <i class="fas fa-align-right"></i>
+                        </div>
+                        <div class="layout-option" data-layout="diagonal">
+                            <i class="fas fa-slash"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3><i class="fas fa-magic"></i> Quick Styles</h3>
+                    
+                    <div class="btn-grid">
+                        <button class="btn btn-secondary" onclick="applyPreset('minimal')">
+                            <i class="fas fa-circle"></i> Minimal
+                        </button>
+                        <button class="btn btn-secondary" onclick="applyPreset('bold')">
+                            <i class="fas fa-font"></i> Bold
+                        </button>
+                        <button class="btn btn-secondary" onclick="applyPreset('elegant')">
+                            <i class="fas fa-gem"></i> Elegant
+                        </button>
+                        <button class="btn btn-secondary" onclick="applyPreset('vibrant')">
+                            <i class="fas fa-rainbow"></i> Vibrant
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="canvas-area">
+                <div class="poster-canvas" id="posterCanvas">
+                    <div class="poster-text" id="posterText">DESIGN<br>IS<br>POWER</div>
+                </div>
+            </div>
+
+            <div class="properties-panel">
+                <div class="control-group">
+                    <h3><i class="fas fa-palette"></i> Colors</h3>
+                    
+                    <div class="form-group">
+                        <label>Text Color</label>
+                        <div class="color-picker-group">
+                            <input type="text" class="form-control" id="textColorHex" value="#000000">
+                            <input type="color" class="color-picker" id="textColor" value="#000000">
+                        </div>
+                        <div class="preset-colors">
+                            <div class="preset-color" style="background: #000000" onclick="setColor('text', '#000000')"></div>
+                            <div class="preset-color" style="background: #ffffff" onclick="setColor('text', '#ffffff')"></div>
+                            <div class="preset-color" style="background: #ff4757" onclick="setColor('text', '#ff4757')"></div>
+                            <div class="preset-color" style="background: #2ed573" onclick="setColor('text', '#2ed573')"></div>
+                            <div class="preset-color" style="background: #3742fa" onclick="setColor('text', '#3742fa')"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Background Color</label>
+                        <div class="color-picker-group">
+                            <input type="text" class="form-control" id="bgColorHex" value="#ffffff">
+                            <input type="color" class="color-picker" id="bgColor" value="#ffffff">
+                        </div>
+                        <div class="preset-colors">
+                            <div class="preset-color" style="background: #ffffff" onclick="setColor('bg', '#ffffff')"></div>
+                            <div class="preset-color" style="background: #000000" onclick="setColor('bg', '#000000')"></div>
+                            <div class="preset-color" style="background: #667eea" onclick="setColor('bg', '#667eea')"></div>
+                            <div class="preset-color" style="background: #f093fb" onclick="setColor('bg', '#f093fb')"></div>
+                            <div class="preset-color" style="background: #4facfe" onclick="setColor('bg', '#4facfe')"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3><i class="fas fa-cogs"></i> Effects</h3>
+                    
+                    <div class="toggle-group">
+                        <label>Gradient Background</label>
+                        <div class="toggle" id="gradientToggle" onclick="toggleGradient()"></div>
+                    </div>
+                    
+                    <div class="toggle-group">
+                        <label>Text Shadow</label>
+                        <div class="toggle" id="shadowToggle" onclick="toggleShadow()"></div>
+                    </div>
+                    
+                    <div class="toggle-group">
+                        <label>Text Outline</label>
+                        <div class="toggle" id="outlineToggle" onclick="toggleOutline()"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Letter Spacing</label>
+                        <input type="range" class="slider" id="letterSpacing" min="-5" max="20" value="2">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Line Height</label>
+                        <input type="range" class="slider" id="lineHeight" min="0.5" max="2" step="0.1" value="0.9">
+                    </div>
+                </div>
+
+                <div class="export-section">
+                    <h3><i class="fas fa-download"></i> Export Options</h3>
+                    
+                    <div class="form-group">
+                        <label style="color: rgba(255,255,255,0.9);">Output Format</label>
+                        <select class="form-control" id="exportFormat">
+                            <option value="png">PNG (High Quality)</option>
+                            <option value="pdf">PDF (Print Ready)</option>
+                            <option value="jpeg">JPEG (Compressed)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="color: rgba(255,255,255,0.9);">Size Preset</label>
+                        <select class="form-control" id="sizePreset">
+                            <option value="a4">A4 (210×297mm)</option>
+                            <option value="a3">A3 (297×420mm)</option>
+                            <option value="poster">Poster (18×24")</option>
+                            <option value="social">Social Media (1080×1080px)</option>
+                            <option value="custom">Custom Size</option>
+                        </select>
+                    </div>
+
+                    <div class="export-options">
+                        <button class="btn btn-export" onclick="exportDesign()">
+                            <i class="fas fa-download"></i> Download Design
+                        </button>
+                        <button class="btn btn-export" onclick="generatePreview()">
+                            <i class="fas fa-eye"></i> Preview Full Size
+                        </button>
+                    </div>
+
+                    <div class="quality-indicator">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Print Quality: 300 DPI</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class TypographicPosterGenerator {
+            constructor() {
+                this.canvas = document.getElementById('posterCanvas');
+                this.text = document.getElementById('posterText');
+                this.currentLayout = 'center';
+                this.effects = {
+                    gradient: false,
+                    shadow: false,
+                    outline: false
+                };
+                
+                this.initializeEventListeners();
+                this.updateDisplay();
+            }
+
+            initializeEventListeners() {
+                // Text content
+                document.getElementById('textContent').addEventListener('input', (e) => {
+                    this.text.innerHTML = e.target.value.replace(/\n/g, '<br>');
+                });
+
+                // Font family
+                document.getElementById('fontFamily').addEventListener('change', (e) => {
+                    this.text.style.fontFamily = e.target.value;
+                });
+
+                // Font size
+                document.getElementById('fontSize').addEventListener('input', (e) => {
+                    this.text.style.fontSize = e.target.value + 'px';
+                    document.getElementById('fontSizeDisplay').textContent = e.target.value + 'px';
+                });
+
+                // Colors
+                document.getElementById('textColor').addEventListener('input', (e) => {
+                    this.text.style.color = e.target.value;
+                    document.getElementById('textColorHex').value = e.target.value;
+                });
+
+                document.getElementById('textColorHex').addEventListener('input', (e) => {
+                    if (this.isValidHex(e.target.value)) {
+                        this.text.style.color = e.target.value;
+                        document.getElementById('textColor').value = e.target.value;
+                    }
+                });
+
+                document.getElementById('bgColor').addEventListener('input', (e) => {
+                    if (!this.effects.gradient) {
+                        this.canvas.style.background = e.target.value;
+                    }
+                    document.getElementById('bgColorHex').value = e.target.value;
+                });
+
+                document.getElementById('bgColorHex').addEventListener('input', (e) => {
+                    if (this.isValidHex(e.target.value)) {
+                        if (!this.effects.gradient) {
+                            this.canvas.style.background = e.target.value;
+                        }
+                        document.getElementById('bgColor').value = e.target.value;
+                    }
+                });
+
+                // Layout options
+                document.querySelectorAll('.layout-option').forEach(option => {
+                    option.addEventListener('click', (e) => {
+                        document.querySelectorAll('.layout-option').forEach(opt => opt.classList.remove('active'));
+                        option.classList.add('active');
+                        this.currentLayout = option.dataset.layout;
+                        this.applyLayout();
+                    });
+                });
+
+                // Letter spacing
+                document.getElementById('letterSpacing').addEventListener('input', (e) => {
+                    this.text.style.letterSpacing = e.target.value + 'px';
+                });
+
+                // Line height
+                document.getElementById('lineHeight').addEventListener('input', (e) => {
+                    this.text.style.lineHeight = e.target.value;
+                });
+            }
+
+            isValidHex(hex) {
+                return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(hex);
+            }
+
+            setColor(type, color) {
+                if (type === 'text') {
+                    this.text.style.color = color;
+                    document.getElementById('textColor').value = color;
+                    document.getElementById('textColorHex').value = color;
+                } else if (type === 'bg') {
+                    if (!this.effects.gradient) {
+                        this.canvas.style.background = color;
+                    }
+                    document.getElementById('bgColor').value = color;
+                    document.getElementById('bgColorHex').value = color;
+                }
+            }
+
+            applyLayout() {
+                this.canvas.style.alignItems = 'center';
+                this.canvas.style.justifyContent = 'center';
+                this.text.style.textAlign = 'center';
+                this.text.style.transform = 'none';
+
+                switch (this.currentLayout) {
+                    case 'left':
+                        this.canvas.style.alignItems = 'center';
+                        this.canvas.style.justifyContent = 'flex-start';
+                        this.text.style.textAlign = 'left';
+                        break;
+                    case 'right':
+                        this.canvas.style.alignItems = 'center';
+                        this.canvas.style.justifyContent = 'flex-end';
+                        this.text.style.textAlign = 'right';
+                        break;
+                    case 'diagonal':
+                        this.text.style.transform = 'rotate(-15deg)';
+                        break;
+                    default:
+                        // center is default
+                        break;
+                }
+            }
+
+            toggleGradient() {
+                const toggle = document.getElementById('gradientToggle');
+                this.effects.gradient = !this.effects.gradient;
+                
+                if (this.effects.gradient) {
+                    toggle.classList.add('active');
+                    this.canvas.classList.add('gradient-bg');
+                } else {
+                    toggle.classList.remove('active');
+                    this.canvas.classList.remove('gradient-bg');
+                    this.canvas.style.background = document.getElementById('bgColor').value;
+                }
+            }
+
+            toggleShadow() {
+                const toggle = document.getElementById('shadowToggle');
+                this.effects.shadow = !this.effects.shadow;
+                
+                if (this.effects.shadow) {
+                    toggle.classList.add('active');
+                    this.text.classList.add('text-shadow');
+                } else {
+                    toggle.classList.remove('active');
+                    this.text.classList.remove('text-shadow');
+                }
+            }
+
+            toggleOutline() {
+                const toggle = document.getElementById('outlineToggle');
+                this.effects.outline = !this.effects.outline;
+                
+                if (this.effects.outline) {
+                    toggle.classList.add('active');
+                    this.text.classList.add('text-outline');
+                } else {
+                    toggle.classList.remove('active');
+                    this.text.classList.remove('text-outline');
+                }
+            }
+
+            applyPreset(preset) {
+                switch (preset) {
+                    case 'minimal':
+                        this.resetEffects();
+                        document.getElementById('fontFamily').value = 'Inter';
+                        document.getElementById('fontSize').value = '48';
+                        document.getElementById('letterSpacing').value = '5';
+                        this.setColor('text', '#000000');
+                        this.setColor('bg', '#ffffff');
+                        break;
+                    case 'bold':
+                        this.resetEffects();
+                        document.getElementById('fontFamily').value = 'Bebas Neue';
+                        document.getElementById('fontSize').value = '80';
+                        document.getElementById('letterSpacing').value = '3';
+                        this.setColor('text', '#ffffff');
+                        this.setColor('bg', '#000000');
+                        this.toggleShadow();
+                        break;
+                    case 'elegant':
+                        this.resetEffects();
+                        document.getElementById('fontFamily').value = 'Playfair Display';
+                        document.getElementById('fontSize').value = '56';
+                        document.getElementById('letterSpacing').value = '2';
+                        this.setColor('text', '#2c3e50');
+                        this.setColor('bg', '#ecf0f1');
+                        break;
+                    case 'vibrant':
+                        this.resetEffects();
+                        document.getElementById('fontFamily').value = 'Montserrat';
+                        document.getElementById('fontSize').value = '64';
+                        document.getElementById('letterSpacing').value = '4';
+                        this.setColor('text', '#ffffff');
+                        this.toggleGradient();
+                        this.toggleShadow();
+                        break;
+                }
+                this.updateDisplay();
+            }
+
+            resetEffects() {
+                // Reset all toggles
+                ['gradientToggle', 'shadowToggle', 'outlineToggle'].forEach(id => {
+                    const toggle = document.getElementById(id);
+                    if (toggle.classList.contains('active')) {
+                        toggle.click();
+                    }
+                });
+            }
+
+            updateDisplay() {
+                // Update all form controls to reflect current state
+                const fontSize = document.getElementById('fontSize').value;
+                document.getElementById('fontSizeDisplay').textContent = fontSize + 'px';
+                
+                this.text.style.fontFamily = document.getElementById('fontFamily').value;
+                this.text.style.fontSize = fontSize + 'px';
+                this.text.style.letterSpacing = document.getElementById('letterSpacing').value + 'px';
+                this.text.style.lineHeight = document.getElementById('lineHeight').value;
+            }
+
+            async exportDesign() {
+                const loadingOverlay = document.getElementById('loadingOverlay');
+                loadingOverlay.style.display = 'flex';
+
+                try {
+                    const format = document.getElementById('exportFormat').value;
+                    const sizePreset = document.getElementById('sizePreset').value;
+                    
+                    // Calculate dimensions based on preset
+                    let width, height, scale;
+                    switch (sizePreset) {
+                        case 'a4':
+                            width = 2480; height = 3508; scale = 3; // 300 DPI
+                            break;
+                        case 'a3':
+                            width = 3508; height = 4961; scale = 4;
+                            break;
+                        case 'poster':
+                            width = 5400; height = 7200; scale = 6;
+                            break;
+                        case 'social':
+                            width = 1080; height = 1080; scale = 2;
+                            break;
+                        default:
+                            width = 1200; height = 1697; scale = 2;
+                    }
+
+                    if (format === 'pdf') {
+                        await this.exportToPDF(width, height, scale);
+                    } else {
+                        await this.exportToImage(format, width, height, scale);
+                    }
+                } catch (error) {
+                    console.error('Export failed:', error);
+                    alert('Export failed. Please try again.');
+                } finally {
+                    loadingOverlay.style.display = 'none';
+                }
+            }
+
+            async exportToImage(format, width, height, scale) {
+                // Create a high-resolution clone
+                const originalCanvas = this.canvas;
+                const clone = originalCanvas.cloneNode(true);
+                
+                // Style the clone for high resolution
+                clone.style.width = width + 'px';
+                clone.style.height = height + 'px';
+                clone.style.position = 'absolute';
+                clone.style.left = '-9999px';
+                clone.style.top = '0';
+                clone.style.transform = `scale(${scale})`;
+                clone.style.transformOrigin = 'top left';
+                
+                document.body.appendChild(clone);
+
+                // Wait for fonts to load
+                await document.fonts.ready;
+                
+                const canvas = await html2canvas(clone, {
+                    width: width,
+                    height: height,
+                    scale: 1,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: null
+                });
+
+                document.body.removeChild(clone);
+
+                // Convert to desired format and download
+                const link = document.createElement('a');
+                link.download = `typographic-poster.${format}`;
+                
+                if (format === 'jpeg') {
+                    link.href = canvas.toDataURL('image/jpeg', 0.95);
+                } else {
+                    link.href = canvas.toDataURL('image/png');
+                }
+                
+                link.click();
+            }
+
+            async exportToPDF(width, height, scale) {
+                const { jsPDF } = window.jspdf;
+                
+                // Create temporary high-res element
+                const clone = this.canvas.cloneNode(true);
+                clone.style.width = width + 'px';
+                clone.style.height = height + 'px';
+                clone.style.position = 'absolute';
+                clone.style.left = '-9999px';
+                clone.style.transform = `scale(${scale})`;
+                clone.style.transformOrigin = 'top left';
+                
+                document.body.appendChild(clone);
+                await document.fonts.ready;
+
+                const canvas = await html2canvas(clone, {
+                    width: width,
+                    height: height,
+                    scale: 1,
+                    useCORS: true,
+                    allowTaint: true
+                });
+
+                document.body.removeChild(clone);
+
+                // Create PDF
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF({
+                    orientation: height > width ? 'portrait' : 'landscape',
+                    unit: 'px',
+                    format: [width, height]
+                });
+
+                pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+                pdf.save('typographic-poster.pdf');
+            }
+
+            generatePreview() {
+                // Open preview in new window
+                const previewWindow = window.open('', '_blank', 'width=800,height=600');
+                const canvasHTML = this.canvas.outerHTML;
+                
+                previewWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Poster Preview</title>
+                        <style>
+                            body { 
+                                margin: 0; 
+                                padding: 20px; 
+                                background: #f0f0f0; 
+                                display: flex; 
+                                justify-content: center; 
+                                align-items: center; 
+                                min-height: 100vh;
+                                font-family: Arial, sans-serif;
+                            }
+                            .preview-container {
+                                background: white;
+                                padding: 20px;
+                                border-radius: 8px;
+                                box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                            }
+                            .poster-canvas {
+                                width: 600px !important;
+                                height: 849px !important;
+                                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                            }
+                            ${document.querySelector('style').textContent}
+                        </style>
+                    </head>
+                    <body>
+                        <div class="preview-container">
+                            <h2 style="text-align: center; margin-bottom: 20px;">Full Size Preview</h2>
+                            ${canvasHTML}
+                        </div>
+                    </body>
+                    </html>
+                `);
+                previewWindow.document.close();
+            }
+        }
+
+        // Global functions for inline event handlers
+        let posterGenerator;
+
+        function setColor(type, color) {
+            posterGenerator.setColor(type, color);
+        }
+
+        function toggleGradient() {
+            posterGenerator.toggleGradient();
+        }
+
+        function toggleShadow() {
+            posterGenerator.toggleShadow();
+        }
+
+        function toggleOutline() {
+            posterGenerator.toggleOutline();
+        }
+
+        function applyPreset(preset) {
+            posterGenerator.applyPreset(preset);
+        }
+
+        function exportDesign() {
+            posterGenerator.exportDesign();
+        }
+
+        function generatePreview() {
+            posterGenerator.generatePreview();
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            posterGenerator = new TypographicPosterGenerator();
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch (e.key.toLowerCase()) {
+                    case 's':
+                        e.preventDefault();
+                        exportDesign();
+                        break;
+                    case 'p':
+                        e.preventDefault();
+                        generatePreview();
+                        break;
+                    case '1':
+                        e.preventDefault();
+                        applyPreset('minimal');
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        applyPreset('bold');
+                        break;
+                    case '3':
+                        e.preventDefault();
+                        applyPreset('elegant');
+                        break;
+                    case '4':
+                        e.preventDefault();
+                        applyPreset('vibrant');
+                        break;
+                }
+            }
+        });
+
+        // Add tooltips for better UX
+        document.querySelectorAll('[title]').forEach(element => {
+            element.addEventListener('mouseenter', (e) => {
+                const tooltip = document.createElement('div');
+                tooltip.className = 'tooltip';
+                tooltip.textContent = e.target.title;
+                tooltip.style.cssText = `
+                    position: absolute;
+                    background: rgba(0,0,0,0.8);
+                    color: white;
+                    padding: 5px 10px;
+                    border-radius: 4px;
+                    font-size: 12px;
+                    pointer-events: none;
+                    z-index: 1000;
+                    white-space: nowrap;
+                `;
+                document.body.appendChild(tooltip);
+                
+                const rect = e.target.getBoundingClientRect();
+                tooltip.style.left = rect.left + 'px';
+                tooltip.style.top = (rect.top - tooltip.offsetHeight - 5) + 'px';
+                
+                e.target.addEventListener('mouseleave', () => {
+                    tooltip.remove();
+                }, { once: true });
+            });
+        });
+
+        // Performance optimization: Debounce rapid changes
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Add auto-save functionality to localStorage alternative (in-memory storage)
+        let autoSaveData = {};
+        
+        function autoSave() {
+            autoSaveData = {
+                textContent: document.getElementById('textContent').value,
+                fontFamily: document.getElementById('fontFamily').value,
+                fontSize: document.getElementById('fontSize').value,
+                textColor: document.getElementById('textColor').value,
+                bgColor: document.getElementById('bgColor').value,
+                letterSpacing: document.getElementById('letterSpacing').value,
+                lineHeight: document.getElementById('lineHeight').value,
+                effects: posterGenerator?.effects || {}
+            };
+        }
+
+        function loadAutoSave() {
+            if (Object.keys(autoSaveData).length > 0) {
+                document.getElementById('textContent').value = autoSaveData.textContent || '';
+                document.getElementById('fontFamily').value = autoSaveData.fontFamily || 'Bebas Neue';
+                document.getElementById('fontSize').value = autoSaveData.fontSize || '64';
+                document.getElementById('textColor').value = autoSaveData.textColor || '#000000';
+                document.getElementById('bgColor').value = autoSaveData.bgColor || '#ffffff';
+                document.getElementById('letterSpacing').value = autoSaveData.letterSpacing || '2';
+                document.getElementById('lineHeight').value = autoSaveData.lineHeight || '0.9';
+                
+                // Trigger change events to update display
+                document.getElementById('textContent').dispatchEvent(new Event('input'));
+                posterGenerator?.updateDisplay();
+            }
+        }
+
+        // Auto-save every 2 seconds
+        setInterval(autoSave, 2000);
+
+        // Load auto-save on page load
+        window.addEventListener('load', () => {
+            setTimeout(loadAutoSave, 100);
+        });
+    </script>
+</body>
+</html>
