@@ -17,7 +17,6 @@ With every refresh or click, you get a new randomized design featuring different
 - `index.html` → main interface
 - `css/` → styles and layouts
 - `js/` → randomization logic
-- `assets/` → fonts and resources
 
 ---
 
